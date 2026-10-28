@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff8ee" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="description" content="A playful, offline-first Chinese food picker for solo cravings or shared meal decisions." />
+  <title>今晚吃什么？ — What Are We Eating?</title>
+  <style>
+    :root {
+      --ink: #34251f;
+      --muted: #84756b;
+      --paper: #fff9f0;
+      --surface: rgba(255,255,255,.82);
+      --line: #eddfd0;
+      --coral: #d65f48;
+      --coral-dark: #b84d39;
+      --peach: #ffe2d4;
+      --sage: #dfe9d9;
+      --lavender: #ebe4f5;
+      --gold: #f3cf79;
+      --shadow: 0 16px 48px rgba(98,62,39,.09);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--ink);
+      background: radial-gradient(circle at 8% 4%, #ffeadc 0, transparent 25rem),
+                  radial-gradient(circle at 94% 18%, #e6eddf 0, transparent 28rem),
+                  var(--paper);
+      font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", Avenir, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #d98d77; outline-offset: 3px; }
+    .app-shell { width: min(1080px, 100%); margin: 0 auto; padding: 18px 22px 46px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap: 16px; padding: 8px 0 25px; }
+    .brand { display:flex; align-items:center; gap: 12px; min-width: 0; }
+    .brand-mark { display:grid; place-items:center; width:46px; height:46px; border-radius:16px; background:#f8d5c4; font-size:25px; box-shadow:inset 0 -3px 0 rgba(175,91,61,.08); }
+    .brand-title { font-size:15px; font-weight:900; letter-spacing:.04em; line-height:1.1; }
+    .brand-sub { margin-top:4px; font-size:11px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; }
+    .top-actions { display:flex; align-items:center; gap:9px; }
+    .offline-pill { display:flex; align-items:center; gap:6px; color:#4f7651; background:#e8f0e2; border:1px solid #d5e3cd; border-radius:999px; padding:9px 12px; font-size:11px; font-weight:800; white-space:nowrap; }
+    .offline-dot { width:7px; height:7px; border-radius:50%; background:#6e9a64; }
+    .icon-button { display:flex; align-items:center; gap:7px; border:1px solid var(--line); border-radius:999px; padding:10px 13px; background:rgba(255,255,255,.7); color:var(--ink); font-weight:800; font-size:12px; }
+    .icon-button:hover { background:white; transform:translateY(-1px); }
+    .screen { display:none; animation: fade-up .32s ease both; }
+    .screen.active { display:block; }
+    @keyframes fade-up { from { opacity:0; transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
+    .eyebrow { margin:0 0 10px; color:var(--coral-dark); font-size:11px; font-weight:900; letter-spacing:.15em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(35px, 6vw, 58px); line-height:1.02; letter-spacing:-.055em; font-weight:950; }
+    h1 .accent { color:var(--coral); }
+    .lede { max-width: 600px; margin:15px 0 25px; color:var(--muted); font-size:15px; line-height:1.65; }
+    .step-track { display:flex; align-items:center; gap:8px; margin:0 0 25px; }
+    .step-dot { height:5px; flex:1; border-radius:99px; background:#eadbca; }
+    .step-dot.on { background:var(--coral); }
+    .step-caption { margin-left:7px; color:var(--muted); font-size:11px; font-weight:800; white-space:nowrap; }
+    .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+    .panel { padding:22px; background:var(--surface); border:1px solid rgba(230,211,191,.84); border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(12px); }
+    .panel.full { grid-column:1 / -1; }
+    .panel-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin:0 0 17px; }
+    .panel h2 { margin:0; font-size:17px; letter-spacing:-.025em; }
+    .panel-desc { margin:5px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
+    .small-counter { flex:none; padding:6px 9px; background:#f8eee2; border-radius:99px; color:#8b6552; font-size:10px; font-weight:850; }
+    .choice-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+    .choice-card { min-height:88px; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:12px; padding:13px 12px; border:1px solid var(--line); background:#fffdf9; border-radius:17px; text-align:left; color:var(--ink); transition:.18s ease; }
+    .choice-card .emoji { font-size:22px; line-height:1; }
+    .choice-card .choice-label { font-size:12px; line-height:1.2; font-weight:850; }
+    .choice-card .choice-help { display:block; font-size:10px; font-weight:500; color:var(--muted); margin-top:4px; line-height:1.35; }
+    .choice-card:hover { transform:translateY(-2px); border-color:#e0b5a3; }
+    .choice-card.selected { border-color:var(--coral); background:#fff0e8; box-shadow:0 0 0 2px rgba(214,95,72,.10); }
+    .plan-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+    .plan-card { min-height:113px; }
+    .people-tabs { display:flex; gap:8px; padding:5px; background:#f7eee5; border-radius:13px; }
+    .people-tabs button { flex:1; border:0; border-radius:10px; padding:10px 12px; color:var(--muted); font-weight:850; background:transparent; font-size:12px; }
+    .people-tabs button.selected { background:white; color:var(--ink); box-shadow:0 2px 8px rgba(80,50,32,.08); }
+    .mode-tabs { margin-bottom:19px; }
+    .profile-heading { margin-top:2px; }
+    .preference-section { margin-top:19px; }
+    .section-label { display:block; margin-bottom:10px; font-size:12px; font-weight:900; }
+    .helper-line { font-size:11px; line-height:1.5; color:var(--muted); margin:8px 0 0; }
+    .toggle-row { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:12px 13px; background:#fff9f3; border:1px solid var(--line); border-radius:14px; }
+    .toggle-row span { font-size:12px; font-weight:800; }
+    .toggle-copy { display:flex; flex-direction:column; gap:4px; }
+    .toggle-copy strong { font-size:12px; font-weight:900; }
+    .toggle-copy small { color:var(--muted); font-size:10px; font-weight:550; line-height:1.45; }
+    .switch { position:relative; flex:none; width:42px; height:24px; }
+    .switch input { position:absolute; opacity:0; width:1px; height:1px; }
+    .switch-track { display:block; width:42px; height:24px; border-radius:20px; background:#d7cabe; transition:.2s; }
+    .switch-track:after { content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0002; transition:.2s; }
+    .switch input:checked + .switch-track { background:var(--coral); }
+    .switch input:checked + .switch-track:after { transform:translateX(18px); }
+    .check-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .check-pill { display:flex; align-items:center; gap:9px; min-height:39px; padding:9px 10px; border:1px solid var(--line); border-radius:12px; background:#fffdf9; font-size:11px; color:#55443a; font-weight:700; cursor:pointer; }
+    .check-pill input { width:15px; height:15px; margin:0; accent-color:var(--coral); flex:none; }
+    .check-pill:has(input:checked) { background:#fff0e8; border-color:#e0aa97; }
+    .hidden { display:none !important; }
+    .subtle-divider { height:1px; background:var(--line); margin:17px 0; }
+    .spice-row { display:flex; gap:7px; }
+    .spice-button { flex:1; padding:10px 8px; border:1px solid var(--line); background:#fffdf9; color:var(--muted); border-radius:12px; font-size:11px; font-weight:850; }
+    .spice-button.selected { color:#9d452f; border-color:#e2a38b; background:#fff0e8; }
+    .allergy-warning { margin-top:12px; padding:11px 12px; border-radius:12px; border:1px solid #f0cfaa; background:#fff5df; color:#7b5a32; font-size:10px; line-height:1.5; }
+    .privacy-note { display:flex; gap:9px; align-items:flex-start; padding:12px 14px; margin-top:14px; border-radius:14px; background:#edf3e8; color:#58704e; font-size:11px; line-height:1.45; }
+    .footer-actions { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-top:22px; }
+    .text-button { padding:11px 2px; border:0; background:transparent; color:var(--muted); font-size:12px; font-weight:800; }
+    .text-button:hover { color:var(--coral-dark); }
+    .primary-button { display:inline-flex; justify-content:center; align-items:center; gap:10px; padding:15px 20px; min-height:52px; border:0; border-radius:15px; background:var(--coral); color:white; font-size:13px; font-weight:900; box-shadow:0 7px 0 #b74d38, 0 13px 24px rgba(180,77,56,.14); transition:.16s ease; }
+    .primary-button:hover { background:#c9543d; transform:translateY(-1px); box-shadow:0 8px 0 #b74d38,0 15px 26px rgba(180,77,56,.18); }
+    .primary-button:active { transform:translateY(4px); box-shadow:0 3px 0 #b74d38; }
+    .primary-button:disabled { opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+    .secondary-button { display:inline-flex; justify-content:center; align-items:center; gap:8px; padding:13px 16px; min-height:47px; background:white; color:var(--ink); border:1px solid var(--line); border-radius:14px; font-size:12px; font-weight:850; }
+    .secondary-button:hover { background:#fff4eb; border-color:#dfb6a1; }
+    .mood-layout { display:grid; grid-template-columns:1fr .72fr; align-items:start; gap:25px; }
+    .mood-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:11px; margin-top:22px; }
+    .mood-card { display:flex; gap:13px; align-items:center; padding:16px; min-height:86px; border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.82); text-align:left; transition:.18s; }
+    .mood-card:hover { transform:translateY(-2px); }
+    .mood-card.selected { background:#fff0e8; border-color:var(--coral); box-shadow:0 0 0 2px rgba(214,95,72,.11); }
+    .mood-icon { width:44px; height:44px; flex:none; display:grid; place-items:center; background:var(--peach); border-radius:15px; font-size:23px; }
+    .mood-card:nth-child(2) .mood-icon { background:#fde4b8; }
+    .mood-card:nth-child(3) .mood-icon { background:var(--sage); }
+    .mood-card:nth-child(4) .mood-icon { background:#dff0ee; }
+    .mood-card:nth-child(5) .mood-icon { background:var(--lavender); }
+    .mood-card:nth-child(6) .mood-icon { background:#f4e2aa; }
+    .mood-title { display:block; font-size:13px; font-weight:900; line-height:1.2; }
+    .mood-desc { display:block; margin-top:5px; color:var(--muted); font-size:10px; line-height:1.4; }
+    .mood-side { padding:24px; background:#f6e6d7; border-radius:26px; position:relative; overflow:hidden; min-height:310px; }
+    .mood-side:after { content:"♡"; position:absolute; right:-12px; bottom:-48px; font-family:Georgia,serif; color:rgba(201,101,72,.15); font-size:190px; line-height:1; transform:rotate(-15deg); }
+    .mood-side .big-emoji { font-size:60px; margin:8px 0 20px; position:relative; z-index:1; }
+    .mood-side h3 { margin:0; font-size:23px; max-width:250px; line-height:1.1; letter-spacing:-.04em; position:relative; z-index:1; }
+    .mood-side p { color:#896b5b; font-size:12px; line-height:1.6; max-width:235px; position:relative; z-index:1; }
+    .mood-side .little-note { position:relative; z-index:1; display:inline-flex; padding:8px 10px; border-radius:99px; background:rgba(255,255,255,.62); font-size:10px; font-weight:850; color:#925a48; }
+    .spin-header { text-align:center; max-width:620px; margin:0 auto 18px; }
+    .spin-header .lede { margin:12px auto 0; }
+    .spin-stage { position:relative; width:min(620px,100%); margin:24px auto 0; padding:17px; border-radius:30px; background:rgba(255,255,255,.74); border:1px solid #ead8c5; box-shadow:var(--shadow); }
+    .stage-ribbon { position:absolute; left:50%; top:-13px; transform:translateX(-50%); z-index:2; padding:7px 13px; border-radius:99px; background:var(--gold); color:#735327; font-size:10px; font-weight:950; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; }
+    .spin-card { overflow:hidden; border-radius:22px; background:#f4e4d5; transition:transform .15s; }
+    .spin-card.spinning { animation: bump .22s ease-in-out infinite alternate; }
+    @keyframes bump { from{transform:rotate(-.5deg) scale(.985)} to{transform:rotate(.5deg) scale(1.005)} }
+    .spin-image { display:block; width:100%; height:clamp(220px, 40vw, 350px); object-fit:cover; background:#f1e1cf; }
+    .spin-info { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:16px 18px 19px; background:#fffdf9; }
+    .spin-name-cn { font-size:25px; line-height:1.1; font-weight:950; letter-spacing:-.04em; }
+    .spin-name-en { margin-top:5px; font-size:12px; color:var(--muted); font-weight:700; }
+    .spin-region { display:inline-flex; max-width:140px; padding:7px 10px; background:#f6eee3; border-radius:99px; text-align:center; font-size:9px; font-weight:850; color:#8e715b; line-height:1.25; }
+    .slot-spark { position:absolute; font-size:25px; pointer-events:none; }
+    .spark-a { left:-9px; top:82px; color:#d68e6c; transform:rotate(-15deg); }
+    .spark-b { right:-8px; top:175px; color:#89a47c; transform:rotate(14deg); }
+    .spin-controls { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:11px; margin:21px auto 0; }
+    .reroll-pill { display:flex; align-items:center; gap:7px; padding:9px 11px; border:1px solid var(--line); border-radius:99px; background:#fffdf9; font-size:10px; font-weight:900; color:var(--muted); }
+    .reroll-dots { display:flex; gap:4px; }
+    .reroll-dot { width:7px; height:7px; border-radius:50%; background:var(--coral); }
+    .reroll-dot.used { background:#ded1c5; }
+    .result-detail { display:none; text-align:center; margin:20px auto 0; max-width:620px; animation:fade-up .35s ease both; }
+    .result-detail.visible { display:block; }
+    .result-kicker { display:inline-block; padding:7px 11px; background:#e6efdf; color:#58744e; border-radius:99px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; }
+    .result-detail h2 { margin:10px 0 7px; font-size:26px; letter-spacing:-.04em; }
+    .result-detail p { max-width:500px; margin:0 auto; color:var(--muted); font-size:12px; line-height:1.6; }
+    .dish-tags { display:flex; justify-content:center; gap:7px; flex-wrap:wrap; margin:13px 0 0; }
+    .dish-tag { background:#f5e9db; color:#846b55; border-radius:99px; padding:6px 9px; font-size:10px; font-weight:850; }
+    .cook-recipe { margin:16px auto 0; max-width:500px; padding:15px 17px; border-radius:16px; background:#f0f3e9; text-align:left; }
+    .cook-recipe strong { display:block; margin-bottom:8px; font-size:12px; }
+    .cook-recipe ol { margin:0; padding-left:19px; color:#627257; font-size:11px; line-height:1.65; }
+    .result-buttons { display:flex; gap:9px; justify-content:center; flex-wrap:wrap; margin-top:17px; }
+    .done-message { display:none; margin:17px auto 0; max-width:440px; padding:14px 15px; border-radius:14px; background:#fff0e8; color:#874734; font-size:12px; font-weight:850; line-height:1.5; }
+    .done-message.visible { display:block; }
+    .back-link { display:inline-flex; gap:7px; align-items:center; margin:19px auto 0; border:0; background:none; color:var(--muted); font-size:11px; font-weight:850; }
+    .filter-count { margin-top:12px; color:var(--muted); font-size:11px; text-align:center; }
+    .empty-state { margin:16px auto; padding:22px; max-width:560px; background:#fff5df; border:1px solid #f0d7ac; border-radius:18px; color:#785b36; font-size:12px; line-height:1.6; text-align:left; }
+    .empty-state strong { display:block; font-size:14px; margin-bottom:6px; }
+    .empty-state button { margin-top:11px; }
+    dialog { width:min(600px,calc(100% - 26px)); max-height:84vh; border:1px solid var(--line); border-radius:24px; padding:0; background:var(--paper); color:var(--ink); box-shadow:0 24px 80px #3c241e33; }
+    dialog::backdrop { background:rgba(49,34,29,.38); backdrop-filter:blur(4px); }
+    .dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:19px 22px; border-bottom:1px solid var(--line); }
+    .dialog-head h2 { margin:0; font-size:19px; }
+    .dialog-body { padding:16px 22px 22px; overflow:auto; }
+    .favorite-row { display:flex; align-items:center; gap:13px; padding:10px 0; border-bottom:1px solid var(--line); }
+    .favorite-row:last-child { border-bottom:0; }
+    .favorite-row img { width:75px; height:60px; object-fit:cover; border-radius:12px; }
+    .favorite-main { min-width:0; flex:1; }
+    .favorite-main strong { display:block; font-size:13px; }
+    .favorite-main span { display:block; margin-top:4px; font-size:11px; color:var(--muted); }
+    .remove-fav { border:1px solid var(--line); background:white; border-radius:10px; padding:7px 9px; font-size:10px; font-weight:850; color:#9e5744; }
+    .no-favs { text-align:center; color:var(--muted); padding:30px 10px; font-size:12px; line-height:1.6; }
+    .toast { position:fixed; left:50%; bottom:23px; transform:translate(-50%,20px); max-width:calc(100% - 28px); padding:12px 16px; border-radius:13px; color:white; background:#382b25; font-size:12px; font-weight:800; opacity:0; pointer-events:none; transition:.25s; z-index:10; box-shadow:0 8px 30px #382b2533; text-align:center; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    .tiny-foot { margin:28px auto 0; max-width:560px; text-align:center; color:#9a897c; font-size:10px; line-height:1.6; }
+    .tiny-foot strong { color:#826b5b; }
+    @media (max-width:760px) {
+      .app-shell { padding:12px 14px 35px; }
+      .topbar { padding-bottom:20px; }
+      .offline-pill { padding:8px 10px; font-size:0; gap:0; }
+      .offline-dot { width:8px; height:8px; }
+      .icon-button { padding:9px 10px; }
+      #share-app span { display:none; }
+      .setup-grid { grid-template-columns:1fr; }
+      .panel.full { grid-column:auto; }
+      .panel { padding:18px; border-radius:21px; }
+      .choice-grid { grid-template-columns:repeat(2,1fr); }
+      .choice-card { min-height:78px; }
+      .plan-grid { grid-template-columns:repeat(2,1fr); }
+      .plan-card { min-height:88px; }
+      .mood-layout { grid-template-columns:1fr; gap:17px; }
+      .mood-grid { margin-top:17px; }
+      .mood-side { min-height:auto; display:grid; grid-template-columns:65px 1fr; column-gap:15px; padding:19px; align-items:center; }
+      .mood-side .big-emoji { font-size:46px; grid-row:span 2; margin:0; }
+      .mood-side h3 { font-size:19px; }
+      .mood-side p { grid-column:1 / -1; margin:10px 0; max-width:100%; }
+      .mood-side .little-note { grid-column:1 / -1; justify-self:start; }
+      .footer-actions { align-items:flex-end; }
+      .footer-actions .primary-button { flex:1; }
+      .spin-stage { padding:10px; margin-top:23px; }
+      .spin-image { height:245px; }
+      .spin-name-cn { font-size:22px; }
+    }
+    @media (max-width:420px) {
+      .brand-title { font-size:13px; }
+      .brand-sub { font-size:9px; }
+      .brand-mark { width:40px; height:40px; border-radius:14px; }
+      h1 { font-size:37px; }
+      .lede { font-size:13px; }
+      .mood-card { padding:11px; gap:9px; min-height:79px; }
+      .mood-icon { width:37px; height:37px; border-radius:13px; font-size:20px; }
+      .mood-title { font-size:12px; }
+      .mood-desc { font-size:9px; }
+      .spin-info { padding:13px; }
+      .spin-name-cn { font-size:20px; }
+      .spin-region { font-size:8px; padding:6px 8px; }
+      .result-buttons button { flex:1 1 42%; }
+      .primary-button { padding:14px 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *:before, *:after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">🥢</div>
+        <div>
+          <div class="brand-title">今晚吃什么？</div>
+          <div class="brand-sub">what are we eating?</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="offline-pill" title="Food data and illustrations are bundled with the app"><span class="offline-dot"></span> Works offline</div>
+        <button class="icon-button" id="share-app" type="button" aria-label="Share this food picker">↗ <span>Share app</span></button>
+        <button class="icon-button" id="open-favorites" type="button" aria-label="Open favorite dishes">♡ <span id="favorite-count">0</span></button>
+      </div>
+    </header>
+
+    <section class="screen active" id="screen-setup" aria-labelledby="setup-title">
+      <div class="step-track"><span class="step-dot on"></span><span class="step-dot"></span><span class="step-dot"></span><span class="step-caption">01 / MAKE IT YOURS</span></div>
+      <p class="eyebrow">A little food picker for whoever's hungry</p>
+      <h1 id="setup-title">So... what sounds<br><span class="accent">delicious?</span></h1>
+      <p class="lede">Choose your meal, set the preferences that matter, and let the food roulette handle the hardest question of the day.</p>
+
+      <div class="setup-grid">
+        <div class="panel">
+          <div class="panel-heading"><div><h2>First, what time is it?</h2><p class="panel-desc">We'll only suggest food that fits the moment.</p></div></div>
+          <div class="choice-grid" id="meal-options">
+            <button class="choice-card" data-meal="breakfast" type="button"><span class="emoji">🍳</span><span class="choice-label">Breakfast</span></button>
+            <button class="choice-card" data-meal="lunch" type="button"><span class="emoji">🍱</span><span class="choice-label">Lunch</span></button>
+            <button class="choice-card selected" data-meal="dinner" type="button"><span class="emoji">🍲</span><span class="choice-label">Dinner</span></button>
+            <button class="choice-card" data-meal="snack" type="button"><span class="emoji">🧋</span><span class="choice-label">Snack / sweet</span></button>
+          </div>
+          <div class="subtle-divider"></div>
+          <div class="panel-heading"><div><h2>How do you want to eat?</h2><p class="panel-desc">Cooking stays off the menu unless you invite it.</p></div></div>
+          <div class="plan-grid" id="plan-options">
+            <button class="choice-card plan-card selected" type="button" data-plan="takeout"><span class="emoji">🛵</span><span class="choice-label">Takeaway<span class="choice-help">Default lazy mode</span></span></button>
+            <button class="choice-card plan-card" type="button" data-plan="restaurant"><span class="emoji">🏮</span><span class="choice-label">Eat out<span class="choice-help">Let's go somewhere</span></span></button>
+            <button class="choice-card plan-card" type="button" data-plan="maybe-cook"><span class="emoji">🧑‍🍳</span><span class="choice-label">Maybe cook<span class="choice-help">Only if you feel like it</span></span></button>
+            <button class="choice-card plan-card" type="button" data-plan="cook"><span class="emoji">🍳</span><span class="choice-label">Let's cook<span class="choice-help">Show easy home recipes</span></span></button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-heading"><div><h2>Who's eating?</h2><p class="panel-desc">Use the picker by yourself or combine preferences for two people.</p></div><span class="small-counter">SAVED HERE</span></div>
+          <div class="people-tabs mode-tabs" id="mode-options" role="group" aria-label="Choose who the food picker is for">
+            <button type="button" data-mode="solo" class="selected" aria-pressed="true">🙋 Just me</button>
+            <button type="button" data-mode="together" aria-pressed="false">🥢 Two people</button>
+          </div>
+          <div class="panel-heading profile-heading"><div><h2 id="profile-heading">Your preferences</h2><p class="panel-desc" id="profile-desc">Only your preferences will shape the food suggestions.</p></div></div>
+          <div class="people-tabs profile-tabs hidden" role="tablist" aria-label="Choose whose preferences to edit">
+            <button type="button" data-person="me" class="selected" role="tab" aria-selected="true">🙋 Person 1</button>
+            <button type="button" data-person="partner" role="tab" aria-selected="false">🧑 Person 2</button>
+          </div>
+          <div class="preference-section">
+            <div class="toggle-row"><span>Does this person have food allergies?</span><label class="switch"><input type="checkbox" id="allergy-toggle" aria-label="This person has allergies"><i class="switch-track"></i></label></div>
+            <div id="allergy-options" class="preference-section hidden">
+              <span class="section-label">Select any known allergies</span>
+              <div class="check-grid" id="allergy-checks">
+                <label class="check-pill"><input type="checkbox" value="peanut"> Peanuts</label>
+                <label class="check-pill"><input type="checkbox" value="tree-nut"> Tree nuts</label>
+                <label class="check-pill"><input type="checkbox" value="sesame"> Sesame</label>
+                <label class="check-pill"><input type="checkbox" value="soy"> Soy / soya</label>
+                <label class="check-pill"><input type="checkbox" value="wheat"> Wheat / gluten</label>
+                <label class="check-pill"><input type="checkbox" value="dairy"> Milk / dairy</label>
+                <label class="check-pill"><input type="checkbox" value="egg"> Egg</label>
+                <label class="check-pill"><input type="checkbox" value="fish"> Fish</label>
+                <label class="check-pill"><input type="checkbox" value="crustacean"> Shrimp / crab</label>
+                <label class="check-pill"><input type="checkbox" value="mollusc"> Clams / squid</label>
+              </div>
+              <div class="allergy-warning"><strong>Important:</strong> This hides dishes with tagged or common possible allergens. Recipes vary, and unlisted ingredients or cross-contact are possible. Always confirm with the restaurant or cook, especially for serious allergies.</div>
+            </div>
+          </div>
+          <div class="preference-section">
+            <span class="section-label">Quick food filter</span>
+            <div class="toggle-row pork-free-row">
+              <span class="toggle-copy"><strong>🥢 Pork-free dishes only</strong><small>Hide dishes known to contain pork or commonly prepared with pork.</small></span>
+              <label class="switch"><input type="checkbox" id="pork-free-toggle" aria-label="Only show pork-free dishes"><i class="switch-track"></i></label>
+            </div>
+            <p class="helper-line">Saved privately on this device. Switch it off any time. Broths, sauces, oils and restaurant preparation can vary, so confirm ingredients when needed.</p>
+          </div>
+          <div class="preference-section">
+            <span class="section-label">Anything else you don't eat?</span>
+            <div class="check-grid" id="diet-checks">
+              <label class="check-pill"><input type="checkbox" value="beef"> Avoid beef</label>
+              <label class="check-pill"><input type="checkbox" value="lamb"> Avoid lamb</label>
+              <label class="check-pill"><input type="checkbox" value="seafood"> Avoid seafood</label>
+              <label class="check-pill"><input type="checkbox" value="vegetarian"> Vegetarian</label>
+            </div>
+          </div>
+          <div class="preference-section">
+            <span class="section-label">How much spice can you handle?</span>
+            <div class="spice-row" id="spice-options">
+              <button class="spice-button" data-spice="0" type="button">🥛 Mild</button>
+              <button class="spice-button selected" data-spice="2" type="button">🌶️ Medium</button>
+              <button class="spice-button" data-spice="3" type="button">🔥 Hot is fine</button>
+            </div>
+          </div>
+          <div class="preference-section">
+            <span class="section-label">Foods you'd rather skip</span>
+            <div class="check-grid" id="dislike-checks">
+              <label class="check-pill"><input type="checkbox" value="cilantro"> Cilantro / 香菜</label>
+              <label class="check-pill"><input type="checkbox" value="fermented"> Fermented / stinky food</label>
+              <label class="check-pill"><input type="checkbox" value="mushroom"> Mushrooms</label>
+              <label class="check-pill"><input type="checkbox" value="garlic"> Garlic</label>
+              <label class="check-pill"><input type="checkbox" value="onion"> Onion / scallion</label>
+              <label class="check-pill"><input type="checkbox" value="very-sweet"> Very sweet food</label>
+              <label class="check-pill"><input type="checkbox" value="offal"> Organs / offal</label>
+              <label class="check-pill"><input type="checkbox" value="bitter-melon"> Bitter melon</label>
+            </div>
+          </div>
+          <div class="privacy-note"><span>🔒</span><span>Your preferences and favourites stay in this browser on this device. Nothing syncs to other phones, so anyone you share the app with gets their own private setup.</span></div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="text-button" id="reset-settings" type="button">Reset preferences</button>
+        <button class="primary-button" id="to-mood" type="button">Next: pick a mood <span>→</span></button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-mood" aria-labelledby="mood-title">
+      <div class="step-track"><span class="step-dot on"></span><span class="step-dot on"></span><span class="step-dot"></span><span class="step-caption">02 / PICK A VIBE</span></div>
+      <div class="mood-layout">
+        <div>
+          <p class="eyebrow">No overthinking allowed</p>
+          <h1 id="mood-title">What's the<br><span class="accent">vibe today?</span></h1>
+          <p class="lede">Just tap the mood that feels closest. It's a nudge, not a rule. The food still has to pass your filters.</p>
+          <div class="mood-grid" id="mood-options">
+            <button class="mood-card" type="button" data-mood="comfort"><span class="mood-icon">🫶</span><span><span class="mood-title">Comfort me</span><span class="mood-desc">Warm, cosy, familiar</span></span></button>
+            <button class="mood-card" type="button" data-mood="spicy"><span class="mood-icon">🌶️</span><span><span class="mood-title">Spicy chaos</span><span class="mood-desc">Bring on some excitement</span></span></button>
+            <button class="mood-card" type="button" data-mood="fresh"><span class="mood-icon">🍃</span><span><span class="mood-title">Fresh & light</span><span class="mood-desc">Something not too heavy</span></span></button>
+            <button class="mood-card" type="button" data-mood="hearty"><span class="mood-icon">🍚</span><span><span class="mood-title">Properly hungry</span><span class="mood-desc">I need a proper meal</span></span></button>
+            <button class="mood-card" type="button" data-mood="lazy"><span class="mood-icon">🛋️</span><span><span class="mood-title">Lazy mode</span><span class="mood-desc">Easy, no extra effort</span></span></button>
+            <button class="mood-card" type="button" data-mood="sweet"><span class="mood-icon">🍓</span><span><span class="mood-title">Treat myself</span><span class="mood-desc">A little dessert energy</span></span></button>
+            <button class="mood-card" type="button" data-mood="surprise"><span class="mood-icon">🎲</span><span><span class="mood-title">Surprise me</span><span class="mood-desc">Let the food universe decide</span></span></button>
+          </div>
+          <div class="footer-actions"><button class="text-button" id="back-setup" type="button">← Back to preferences</button><button class="primary-button" id="to-spin" type="button">Let's play <span>✦</span></button></div>
+        </div>
+        <aside class="mood-side"><div class="big-emoji" id="mood-side-emoji">💌</div><h3 id="mood-side-title">One hungry person.<br>One delicious answer.</h3><p id="mood-side-copy">No more scrolling endlessly and still not knowing what to order.</p><span class="little-note" id="mood-side-note">MADE FOR YOUR NEXT CRAVING ♡</span></aside>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-spin" aria-labelledby="spin-title">
+      <div class="step-track"><span class="step-dot on"></span><span class="step-dot on"></span><span class="step-dot on"></span><span class="step-caption">03 / LET FATE DECIDE</span></div>
+      <div class="spin-header">
+        <p class="eyebrow">Drumroll, please</p>
+        <h1 id="spin-title">The next meal's <span class="accent">main character.</span></h1>
+        <p class="lede" id="spin-subtitle">A little spin, a tiny bit of suspense, and one less decision to make.</p>
+      </div>
+      <div id="empty-pool" class="empty-state hidden"><strong>You've filtered the food universe a little too well 😅</strong>There aren't any dishes in this combination yet. Try another meal time, lower the spice limit, or remove one preference. Allergy and dietary restrictions should only be changed when genuinely appropriate.<br><button class="secondary-button" id="edit-filters" type="button">Review my filters</button></div>
+      <div id="roulette-area">
+        <div class="spin-stage">
+          <span class="stage-ribbon">THE FOOD ROULETTE</span><span class="slot-spark spark-a">✦</span><span class="slot-spark spark-b">✿</span>
+          <div class="spin-card" id="spin-card">
+            <img id="spin-image" class="spin-image" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22440%22%20height%3D%22320%22%20viewBox%3D%220%200%20440%20320%22%20role%3D%22img%22%20aria-label%3D%22Illustration%20of%20Chinese%20hot%20pot%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23F3E1D4%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFF5E8%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22bowl%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23FFF9F0%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9C3A7%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22sauce%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23B44C3A%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9A077%22/%3E%3C/linearGradient%3E%0A%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22180%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%228%22/%3E%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%22440%22%20height%3D%22320%22%20rx%3D%2228%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%3Ccircle%20cx%3D%2246%22%20cy%3D%2252%22%20r%3D%2237%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.22%22/%3E%3Ccircle%20cx%3D%22391%22%20cy%3D%22270%22%20r%3D%2253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.18%22/%3E%0A%3Cpath%20d%3D%22M0%20252%20Q110%20228%20220%20255%20T440%20244%20L440%20320%20L0%20320%20Z%22%20fill%3D%22%23D9A077%22%20opacity%3D%22.12%22/%3E%0A%3Cellipse%20cx%3D%22222%22%20cy%3D%22252%22%20rx%3D%22138%22%20ry%3D%2220%22%20fill%3D%22%2366503D%22%20opacity%3D%22.15%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%3Cpath%20d%3D%22M88%20140%20Q103%20278%20220%20281%20Q338%20278%20353%20140%20Z%22%20fill%3D%22url%28%23bowl%29%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%224%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22145%22%20rx%3D%22134%22%20ry%3D%2257%22%20fill%3D%22%23F7F0E5%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%225%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22147%22%20rx%3D%22120%22%20ry%3D%2247%22%20fill%3D%22%23C95D3D%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22128%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22128%22%20rx%3D%2213%22%20ry%3D%2211%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22128%22%20rx%3D%2215%22%20ry%3D%227%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22270%22%20cy%3D%22128%22%20rx%3D%2214%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22157%22%20rx%3D%2216%22%20ry%3D%226%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22157%22%20rx%3D%2213%22%20ry%3D%228%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22157%22%20rx%3D%2214%22%20ry%3D%2210%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Ccircle%20cx%3D%22214%22%20cy%3D%22150%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22193%22%20cy%3D%22147%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22127%22%20cy%3D%22141%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22207%22%20cy%3D%22167%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22239%22%20cy%3D%22164%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22216%22%20cy%3D%22133%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22224%22%20cy%3D%22153%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22226%22%20cy%3D%22149%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22177%22%20cy%3D%22157%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22131%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22155%22%20cy%3D%22116%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22285%22%20cy%3D%22149%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22229%22%20cy%3D%22124%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Cpath%20d%3D%22M270%2046%20L355%20185%22%20stroke%3D%22%238D573B%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M287%2039%20L369%20177%22%20stroke%3D%22%23BF8B5A%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M53%20125%20Q55%20130%2060%20132%20Q55%20134%2053%20139%20Q51%20134%2046%20132%20Q51%20130%2053%20125%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M372%2077%20Q374%2082%20379%2084%20Q374%2086%20372%2091%20Q370%2086%20365%2084%20Q370%2082%20372%2077%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M68%20253%20Q70%20258%2075%20260%20Q70%20262%2068%20267%20Q66%20262%2061%20260%20Q66%20258%2068%20253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M356%20245%20Q358%20250%20363%20252%20Q358%20254%20356%20259%20Q354%20254%20349%20252%20Q354%20250%20356%20245%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3C/svg%3E" alt="Chinese dish illustration" />
+            <div class="spin-info"><div><div id="spin-name-cn" class="spin-name-cn">准备好了吗？</div><div id="spin-name-en" class="spin-name-en">Ready to find something yummy?</div></div><span id="spin-region" class="spin-region">YOUR NEXT MEAL</span></div>
+          </div>
+        </div>
+        <div class="spin-controls">
+          <button class="primary-button" id="spin-button" type="button">Spin for our food <span>🎲</span></button>
+          <div class="reroll-pill" id="reroll-counter"><span>REROLLS</span><span class="reroll-dots"><i class="reroll-dot"></i><i class="reroll-dot"></i></span><span>2 left</span></div>
+        </div>
+        <div class="filter-count" id="filter-count"></div>
+        <div class="result-detail" id="result-detail" aria-live="polite">
+          <span class="result-kicker">The universe has spoken ✨</span>
+          <h2 id="result-title">This is the one.</h2>
+          <p id="result-note"></p>
+          <div class="dish-tags" id="dish-tags"></div>
+          <div class="cook-recipe hidden" id="cook-recipe"><strong>👩‍🍳 Easy version at home</strong><ol id="recipe-steps"></ol></div>
+          <div class="result-buttons">
+            <button class="primary-button" id="accept-pick" type="button">That's our dinner ♡</button>
+            <button class="secondary-button" id="save-favorite" type="button">♡ Save favourite</button>
+            <button class="secondary-button" id="share-pick" type="button">↗ Share this dish</button>
+            <button class="secondary-button" id="reroll-button" type="button">↻ Shuffle again</button>
+          </div>
+          <div class="done-message" id="done-message"></div>
+        </div>
+      </div>
+      <button class="back-link" id="back-mood" type="button">← Change the mood</button>
+    </section>
+
+    <p class="tiny-foot"><strong>一点点爱，一顿好饭。</strong> A tiny bit of love, one good meal. This picker is an idea generator, not an ingredient or allergy-safety guarantee. Always check the actual dish and preparation.</p>
+  </div>
+
+  <dialog id="favorites-dialog" aria-labelledby="favorites-title">
+    <div class="dialog-head"><h2 id="favorites-title">Your saved cravings ♡</h2><button class="icon-button" id="close-favorites" type="button">Close ✕</button></div>
+    <div class="dialog-body" id="favorites-list"></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+window.FOOD_DATABASE = [
+  {id:'baozi',cn:'包子',en:'Steamed buns',region:'Everyday favourite',meal:['breakfast','lunch'],mood:['comfort','lazy','hearty'],allergens:['wheat','soy'],diet:['pork'],dislikes:[],spice:0,homeCook:true,art:'dumpling',note:'Soft, filling and easy to share.',recipe:['Buy frozen buns or prepare ready-made buns.','Steam for 8–12 minutes until hot throughout.','Serve with soy milk or a simple soup.'],emoji:'🥟'},
+  {id:'soy-milk',cn:'豆浆',en:'Soy milk',region:'Northern-style breakfast',meal:['breakfast','snack'],mood:['fresh','lazy','sweet'],allergens:['soy'],diet:[],dislikes:[],spice:0,homeCook:true,art:'drink',note:'A gentle breakfast drink.',recipe:['Use unsweetened or sweetened soy milk.','Warm gently or serve chilled.','Pair with buns or youtiao.'],emoji:'🥛'},
+  {id:'youtiao',cn:'油条',en:'Chinese fried dough sticks',region:'Northern-style breakfast',meal:['breakfast'],mood:['hearty','lazy'],allergens:['wheat'],diet:[],dislikes:[],spice:0,homeCook:false,art:'street',note:'Crispy outside, fluffy inside.',emoji:'🥖'},
+  {id:'jianbing',porkRisk:true,cn:'煎饼果子',en:'Jianbing breakfast crepe',region:'Tianjin',meal:['breakfast','lunch'],mood:['hearty','lazy'],allergens:['wheat','egg','soy','sesame'],diet:[],dislikes:['cilantro'],spice:1,homeCook:true,art:'street',note:'A savoury crepe folded around crunchy fillings.',recipe:['Spread a thin wheat batter in a hot pan.','Add an egg, sauce and crunchy cracker or youtiao.','Fold with spring onion and optional cilantro.'],emoji:'🥞'},
+  {id:'tea-egg',cn:'茶叶蛋',en:'Tea eggs',region:'Everyday snack',meal:['breakfast','snack'],mood:['comfort','lazy'],allergens:['egg','soy'],diet:[],dislikes:[],spice:0,homeCook:true,art:'egg',note:'A savoury, aromatic grab-and-go snack.',recipe:['Hard-boil eggs, then gently crack the shells.','Simmer in tea, soy sauce and warm spices.','Let them steep for deeper flavour.'],emoji:'🥚'},
+  {id:'wonton',cn:'馄饨汤',en:'Wonton soup',region:'Southern China',meal:['breakfast','lunch','dinner'],mood:['comfort','fresh'],allergens:['wheat','soy','egg'],diet:['pork'],dislikes:[],spice:0,homeCook:true,art:'soup',note:'Comforting dumplings in a light broth.',recipe:['Bring a light stock to a boil.','Cook wontons according to the packet instructions.','Add leafy greens and spring onion.'],emoji:'🍜'},
+  {id:'xiaolongbao',cn:'小笼包',en:'Soup dumplings',region:'Jiangnan / Shanghai',meal:['breakfast','lunch'],mood:['comfort','hearty'],allergens:['wheat','soy'],diet:['pork'],dislikes:[],spice:0,homeCook:true,art:'dumpling',note:'Juicy little dumplings; let them cool before eating.',recipe:['Place frozen soup dumplings in a lined steamer.','Steam according to the package instructions.','Lift carefully and let cool before taking a bite.'],emoji:'🥟'},
+  {id:'beef-noodles',cn:'牛肉面',en:'Beef noodle soup',region:'Lanzhou / Northwest',meal:['lunch','dinner'],mood:['comfort','hearty'],allergens:['wheat','soy'],diet:['beef'],dislikes:[],spice:1,homeCook:true,art:'noodles',note:'A warming bowl with noodles, beef and broth.',recipe:['Cook wheat noodles separately.','Warm beef broth and cooked beef slices.','Combine and top with scallion; add chilli to taste.'],emoji:'🍜'},
+  {id:'huangmenji',cn:'黄焖鸡米饭',en:'Braised chicken with rice',region:'Shandong-style chain favourite',meal:['lunch','dinner'],mood:['comfort','hearty'],allergens:['soy','wheat'],diet:[],dislikes:['mushroom'],spice:1,homeCook:true,art:'rice',note:'Saucy chicken over rice; a dependable meal-box choice.',recipe:['Sear chicken pieces with ginger.','Simmer with soy sauce, mushrooms and peppers until cooked.','Serve the chicken and sauce over hot rice.'],emoji:'🍗'},
+  {id:'kung-pao',cn:'宫保鸡丁',en:'Kung Pao chicken',region:'Sichuan',meal:['lunch','dinner'],mood:['spicy','hearty'],allergens:['peanut','soy','wheat'],diet:[],dislikes:[],spice:2,homeCook:true,art:'stirfry',note:'A sweet-savoury Sichuan classic, often with peanuts.',recipe:['Stir-fry diced chicken until nearly cooked.','Add dried chilli, vegetables and a soy-vinegar sauce.','Add roasted peanuts only if safe, then serve with rice.'],emoji:'🥘'},
+  {id:'tomato-egg',cn:'番茄炒蛋盖饭',en:'Tomato and egg rice bowl',region:'Home-style Chinese',meal:['lunch','dinner'],mood:['comfort','fresh','lazy'],allergens:['egg','soy'],diet:['vegetarian'],dislikes:[],spice:0,homeCook:true,art:'rice',note:'Soft eggs and bright tomato sauce over rice.',recipe:['Scramble eggs until just set and set aside.','Cook chopped tomatoes with a little salt until saucy.','Return eggs to the pan and serve over rice.'],emoji:'🍳'},
+  {id:'mapo-tofu',cn:'麻婆豆腐',en:'Mapo tofu',region:'Sichuan',meal:['lunch','dinner'],mood:['spicy','hearty'],allergens:['soy','wheat'],diet:['pork'],dislikes:['very-spicy'],spice:3,homeCook:true,art:'tofu',note:'Silky tofu in a bold, spicy bean sauce; meat varies by recipe.',recipe:['Gently simmer tofu cubes in a spicy bean sauce.','Add minced meat or mushrooms if desired.','Thicken lightly and serve with rice.'],emoji:'🌶️'},
+  {id:'hotpot',porkRisk:true,cn:'火锅',en:'Chinese hot pot',region:'Shared meal',meal:['lunch','dinner'],mood:['spicy','comfort','hearty'],allergens:['soy','sesame','peanut','fish','crustacean'],diet:[],dislikes:['cilantro','very-spicy'],spice:3,homeCook:true,art:'hotpot',note:'A fun meal to share; broth and dipping sauces vary widely.',recipe:['Prepare a broth suitable for everyone.','Set out sliced vegetables, tofu, noodles and chosen proteins.','Cook each ingredient fully in the simmering broth.'],emoji:'🍲'},
+  {id:'malatang',porkRisk:true,cn:'麻辣烫',en:'Malatang spicy soup',region:'Sichuan / street-food favourite',meal:['lunch','dinner'],mood:['spicy','lazy','hearty'],allergens:['soy','sesame','peanut','wheat','fish','crustacean'],diet:[],dislikes:['cilantro','very-spicy'],spice:3,homeCook:false,art:'hotpot',note:'Choose-your-own ingredients in a spicy or mild broth.',emoji:'🥣'},
+  {id:'chongqing-noodles',porkRisk:true,cn:'重庆小面',en:'Chongqing noodles',region:'Chongqing',meal:['breakfast','lunch','dinner'],mood:['spicy','lazy','hearty'],allergens:['wheat','soy','sesame','peanut'],diet:[],dislikes:['cilantro','very-spicy'],spice:3,homeCook:true,art:'noodles',note:'A punchy chilli-oil noodle bowl; ask for less spice if needed.',recipe:['Cook wheat noodles and drain.','Mix soy sauce, vinegar, sesame paste and chilli oil to taste.','Toss noodles in the sauce and add scallions.'],emoji:'🍜'},
+  {id:'hot-dry-noodles',cn:'热干面',en:'Wuhan hot dry noodles',region:'Wuhan / Hubei',meal:['breakfast','lunch'],mood:['hearty','lazy'],allergens:['wheat','sesame','soy'],diet:[],dislikes:['cilantro'],spice:1,homeCook:true,art:'noodles',note:'Chewy noodles coated in sesame sauce.',recipe:['Cook alkaline noodles and drain well.','Toss with sesame paste, soy sauce and a little hot water.','Top with pickled vegetables and scallion.'],emoji:'🍜'},
+  {id:'liangpi',cn:'凉皮',en:'Cold skin noodles',region:'Shaanxi',meal:['lunch','dinner'],mood:['fresh','spicy'],allergens:['wheat','sesame','soy'],diet:['vegetarian'],dislikes:['cilantro','very-spicy'],spice:2,homeCook:true,art:'noodles',note:'Cool, chewy noodles with a tangy chilli-sesame dressing.',recipe:['Slice chilled liangpi noodles.','Mix vinegar, soy, sesame paste and chilli to taste.','Add cucumber strips and optional cilantro.'],emoji:'🥗'},
+  {id:'roujiamo',cn:'肉夹馍',en:'Chinese meat burger',region:'Shaanxi',meal:['breakfast','lunch','dinner'],mood:['hearty','lazy'],allergens:['wheat','soy'],diet:['pork'],dislikes:[],spice:0,homeCook:false,art:'street',note:'Crisp flatbread filled with savoury chopped braised meat; meat type varies.',emoji:'🥙'},
+  {id:'yangrouchuan',cn:'羊肉串',en:'Xinjiang lamb skewers',region:'Xinjiang',meal:['lunch','dinner','snack'],mood:['spicy','hearty'],allergens:[],diet:['lamb'],dislikes:[],spice:2,homeCook:true,art:'skewer',note:'Grilled lamb with cumin and chilli seasoning.',recipe:['Thread lamb cubes onto skewers.','Season with cumin, salt and optional chilli.','Grill or pan-sear until safely cooked through.'],emoji:'🍢'},
+  {id:'yangzhou-fried-rice',porkRisk:true,cn:'扬州炒饭',en:'Yangzhou fried rice',region:'Jiangsu',meal:['lunch','dinner'],mood:['hearty','lazy'],allergens:['egg','soy','wheat','crustacean'],diet:[],dislikes:[],spice:0,homeCook:true,art:'rice',note:'Fried rice with egg and mixed additions; restaurant recipes vary.',recipe:['Use chilled cooked rice.','Scramble egg, then stir-fry with rice and vegetables.','Add cooked protein and season with a little soy sauce.'],emoji:'🍚'},
+  {id:'duck-rice',cn:'烤鸭饭',en:'Roast duck rice',region:'Beijing-inspired',meal:['lunch','dinner'],mood:['hearty','comfort'],allergens:['soy','wheat'],diet:[],dislikes:[],spice:0,homeCook:false,art:'rice',note:'Roast duck with rice and savoury sauce.',emoji:'🍗'},
+  {id:'braised-pork-rice',cn:'红烧肉饭',en:'Braised pork rice',region:'East China',meal:['lunch','dinner'],mood:['comfort','hearty'],allergens:['soy','wheat'],diet:['pork'],dislikes:[],spice:0,homeCook:true,art:'rice',note:'Tender, soy-braised pork served over rice.',recipe:['Brown pork belly pieces in a pot.','Braise with soy sauce, aromatics and water until tender.','Serve a modest portion with rice and greens.'],emoji:'🍚'},
+  {id:'suan-cai-fish',cn:'酸菜鱼',en:'Fish with pickled mustard greens',region:'Sichuan / Chongqing',meal:['lunch','dinner'],mood:['spicy','comfort'],allergens:['fish','soy','wheat'],diet:['seafood'],dislikes:['very-spicy'],spice:2,homeCook:true,art:'fish',note:'Tangy fish soup with pickled greens; spice level varies.',recipe:['Simmer pickled mustard greens in stock.','Add sliced fish and cook gently until just done.','Finish with aromatics and serve with rice.'],emoji:'🐟'},
+  {id:'shuizhu-fish',cn:'水煮鱼',en:'Sichuan chilli-poached fish',region:'Sichuan',meal:['lunch','dinner'],mood:['spicy','hearty'],allergens:['fish','soy','sesame'],diet:['seafood'],dislikes:['very-spicy'],spice:3,homeCook:true,art:'fish',note:'Tender fish in a chilli-forward broth; often very spicy.',recipe:['Cook fish slices gently in seasoned stock.','Add vegetables and a Sichuan-style chilli sauce.','Adjust chilli carefully and serve with rice.'],emoji:'🌶️'},
+  {id:'fish-fragrant-pork',cn:'鱼香肉丝',en:'Sichuan shredded pork',region:'Sichuan',meal:['lunch','dinner'],mood:['spicy','hearty'],allergens:['soy','wheat'],diet:['pork'],dislikes:['very-spicy'],spice:2,homeCook:true,art:'stirfry',note:'Despite the name, this dish usually contains pork rather than fish.',recipe:['Stir-fry shredded pork until cooked.','Add bamboo shoots or peppers and a garlic-vinegar sauce.','Serve with rice.'],emoji:'🥘'},
+  {id:'dry-pot-cauliflower',cn:'干锅花菜',en:'Dry-pot cauliflower',region:'Hunan / Sichuan-inspired',meal:['lunch','dinner'],mood:['spicy','fresh'],allergens:['soy','wheat'],diet:['vegetarian'],dislikes:['very-spicy'],spice:2,homeCook:true,art:'stirfry',note:'Crispy-tender cauliflower with savoury, spicy seasoning.',recipe:['Blanch cauliflower briefly, then drain.','Stir-fry with garlic, peppers and a little soy sauce.','Add chilli only to the preferred heat level.'],emoji:'🥦'},
+  {id:'garlic-greens',cn:'蒜蓉青菜',en:'Garlic leafy greens',region:'Cantonese-style side',meal:['lunch','dinner'],mood:['fresh','lazy'],allergens:['soy'],diet:['vegetarian'],dislikes:['garlic'],spice:0,homeCook:true,art:'greens',note:'A simple vegetable dish to balance a richer meal.',recipe:['Wash and dry leafy greens.','Quickly stir-fry garlic in a little oil.','Add greens and cook until just tender; season lightly.'],emoji:'🥬'},
+  {id:'sour-potato',cn:'酸辣土豆丝',en:'Hot-and-sour shredded potato',region:'Northern China',meal:['lunch','dinner'],mood:['fresh','spicy','lazy'],allergens:[],diet:['vegetarian'],dislikes:['very-spicy'],spice:2,homeCook:true,art:'stirfry',note:'Crisp potato strips with a bright vinegar kick.',recipe:['Slice potato into thin matchsticks and rinse.','Stir-fry quickly with garlic and a little chilli.','Finish with vinegar and salt.'],emoji:'🥔'},
+  {id:'dapanji',cn:'大盘鸡',en:'Xinjiang big-plate chicken',region:'Xinjiang',meal:['lunch','dinner'],mood:['hearty','spicy'],allergens:['wheat','soy'],diet:[],dislikes:['very-spicy'],spice:2,homeCook:true,art:'stirfry',note:'A generous plate of chicken, potatoes and peppers.',recipe:['Brown chicken and add ginger, garlic and spices.','Simmer with potato, peppers and a savoury sauce.','Serve with rice or wide noodles.'],emoji:'🍗'},
+  {id:'dumplings',cn:'饺子',en:'Chinese dumplings',region:'Northern China',meal:['breakfast','lunch','dinner'],mood:['comfort','hearty','lazy'],allergens:['wheat','soy'],diet:['pork'],dislikes:[],spice:0,homeCook:true,art:'dumpling',note:'Boiled, steamed or pan-fried; filling options vary.',recipe:['Bring water to a boil or heat a lightly oiled pan.','Cook dumplings according to the package directions.','Serve with vinegar; check the filling before ordering.'],emoji:'🥟'},
+  {id:'scallion-noodles',porkRisk:true,cn:'葱油拌面',en:'Scallion oil noodles',region:'Shanghai',meal:['breakfast','lunch','dinner'],mood:['lazy','comfort'],allergens:['wheat','soy'],diet:['vegetarian'],dislikes:['onion'],spice:0,homeCook:true,art:'noodles',note:'Simple noodles with fragrant scallion oil and soy sauce.',recipe:['Cook noodles and drain.','Gently fry chopped scallions in oil until golden.','Toss noodles with scallion oil and a little soy sauce.'],emoji:'🍜'},
+  {id:'congee',porkRisk:true,cn:'白粥配小菜',en:'Congee with side dishes',region:'Across China',meal:['breakfast','lunch','dinner'],mood:['comfort','fresh','lazy'],allergens:['soy','sesame'],diet:['vegetarian'],dislikes:[],spice:0,homeCook:true,art:'soup',note:'Warm rice porridge with small savoury sides.',recipe:['Simmer rice with plenty of water until creamy.','Season lightly.','Serve with pickled vegetables or greens after checking ingredients.'],emoji:'🥣'},
+  {id:'baozi-veg',cn:'香菇青菜包',en:'Mushroom and greens bun',region:'Chinese bakery / breakfast',meal:['breakfast','lunch'],mood:['comfort','lazy'],allergens:['wheat','soy'],diet:['vegetarian'],dislikes:['mushroom'],spice:0,homeCook:true,art:'dumpling',note:'A soft steamed bun with a savoury vegetable filling.',recipe:['Use ready-made vegetable buns.','Steam according to the package directions.','Serve hot with tea or soy milk.'],emoji:'🥟'},
+  {id:'stinky-tofu',cn:'臭豆腐',en:'Stinky tofu',region:'Street-food favourite',meal:['lunch','dinner','snack'],mood:['spicy','surprise'],allergens:['soy','wheat'],diet:['vegetarian'],dislikes:['fermented','fermented','very-spicy'],spice:2,homeCook:false,art:'street',note:'A famously pungent fermented tofu snack—not for every mood.',emoji:'🧈'},
+  {id:'scallion-pancake',porkRisk:true,cn:'葱油饼',en:'Scallion pancake',region:'Northern / East China',meal:['breakfast','lunch','snack'],mood:['hearty','lazy'],allergens:['wheat'],diet:['vegetarian'],dislikes:['onion'],spice:0,homeCook:true,art:'street',note:'Flaky, savoury and best eaten hot.',recipe:['Pan-fry a frozen scallion pancake with a little oil.','Flip until crisp and fully heated.','Cut into wedges and share.'],emoji:'🥞'},
+  {id:'milk-tea',cn:'奶茶',en:'Milk tea',region:'Modern Chinese tea shops',meal:['snack','dessert'],mood:['sweet','surprise'],allergens:['dairy','soy'],diet:[],dislikes:['very-sweet'],spice:0,homeCook:false,art:'drink',note:'Choose sugar and ice levels to suit your mood.',emoji:'🧋'},
+  {id:'tanghulu',cn:'糖葫芦',en:'Candied hawthorn skewers',region:'Northern China / street snack',meal:['snack','dessert'],mood:['sweet','surprise'],allergens:[],diet:['vegetarian'],dislikes:['very-sweet'],spice:0,homeCook:false,art:'dessert',note:'Crunchy sugar-coated fruit on a stick.',emoji:'🍡'},
+  {id:'egg-tart',cn:'蛋挞',en:'Egg tart',region:'Hong Kong / bakery',meal:['breakfast','snack','dessert'],mood:['sweet','comfort'],allergens:['egg','dairy','wheat'],diet:[],dislikes:['very-sweet'],spice:0,homeCook:true,art:'dessert',note:'A flaky pastry with a soft custard centre.',recipe:['Place ready-made egg tarts on a baking tray.','Warm in the oven following the package instructions.','Let the custard cool slightly before eating.'],emoji:'🥧'},
+  {id:'double-skin-milk',cn:'双皮奶',en:'Double-skin milk pudding',region:'Guangdong',meal:['snack','dessert'],mood:['sweet','comfort'],allergens:['dairy','egg'],diet:[],dislikes:['very-sweet'],spice:0,homeCook:true,art:'dessert',note:'A smooth, milky Cantonese dessert.',recipe:['Warm milk gently and mix with egg white and sugar.','Steam in small bowls until softly set.','Chill or serve slightly warm.'],emoji:'🍮'},
+  {id:'red-bean-soup',cn:'红豆沙',en:'Sweet red bean soup',region:'Chinese dessert shops',meal:['snack','dessert'],mood:['sweet','comfort'],allergens:[],diet:['vegetarian'],dislikes:['very-sweet'],spice:0,homeCook:true,art:'dessert',note:'A warm or chilled sweet red-bean dessert.',recipe:['Soak red beans, then simmer until very soft.','Sweeten lightly to taste.','Serve warm or chill for later.'],emoji:'🍵'},
+  {id:'osmanthus-cake',cn:'桂花糕',en:'Osmanthus rice cake',region:'Jiangnan',meal:['snack','dessert'],mood:['sweet','fresh'],allergens:['wheat'],diet:['vegetarian'],dislikes:['very-sweet'],spice:0,homeCook:true,art:'dessert',note:'A fragrant, lightly sweet cake; recipes differ by region.',recipe:['Mix rice flour with water and a little sugar.','Steam in a shallow pan until set.','Finish with osmanthus syrup if desired.'],emoji:'🍰'},
+  {id:'egg-waffle',cn:'鸡蛋仔',en:'Hong Kong egg waffles',region:'Hong Kong',meal:['snack','dessert'],mood:['sweet','surprise'],allergens:['egg','dairy','wheat'],diet:[],dislikes:['very-sweet'],spice:0,homeCook:false,art:'dessert',note:'Crisp outside, soft inside, and easy to share.',emoji:'🧇'},
+  {id:'sour-plum',cn:'酸梅汤',en:'Sour plum drink',region:'Northern China / hot-pot companion',meal:['snack','drink'],mood:['fresh','sweet'],allergens:[],diet:['vegetarian'],dislikes:[],spice:0,homeCook:false,art:'drink',note:'A tangy, refreshing drink often served with rich food.',emoji:'🥤'},
+  {id:'lemon-tea',cn:'柠檬茶',en:'Lemon tea',region:'Modern tea shops',meal:['snack','drink'],mood:['fresh','sweet'],allergens:[],diet:['vegetarian'],dislikes:['very-sweet'],spice:0,homeCook:false,art:'drink',note:'Refreshing tea with lemon; sugar is usually adjustable.',emoji:'🍋'},
+  {id:'tofu-pudding',cn:'豆花',en:'Tofu pudding',region:'Across China; sweet or savoury varies',meal:['breakfast','snack','dessert'],mood:['fresh','comfort','sweet'],allergens:['soy'],diet:['vegetarian'],dislikes:[],spice:0,homeCook:true,art:'dessert',note:'Soft tofu pudding—toppings can be sweet or savoury depending on the region.',recipe:['Warm ready-made tofu pudding gently.','Add a sweet ginger syrup or savoury toppings.','Check topping ingredients before serving.'],emoji:'🍮'},
+  {id:'cucumber-salad',cn:'拍黄瓜',en:'Smashed cucumber salad',region:'Northern China',meal:['lunch','dinner'],mood:['fresh','lazy'],allergens:['soy','sesame'],diet:['vegetarian'],dislikes:['garlic','cilantro'],spice:1,homeCook:true,art:'greens',note:'Cold, crunchy cucumber with a tangy dressing.',recipe:['Lightly smash and cut cucumbers.','Toss with vinegar, garlic and a little sesame oil.','Chill briefly before serving.'],emoji:'🥒'},
+  {id:'sichuan-skewers',cn:'钵钵鸡',en:'Sichuan chilled spicy skewers',region:'Sichuan / Leshan',meal:['lunch','dinner','snack'],mood:['spicy','fresh','surprise'],allergens:['sesame','soy','peanut'],diet:[],dislikes:['very-spicy','cilantro'],spice:2,homeCook:false,art:'skewer',note:'Chilled skewers in a fragrant spicy sauce; ingredients vary.',emoji:'🍢'},
+  {id:'rice-noodles',porkRisk:true,cn:'过桥米线',en:'Crossing-the-bridge rice noodles',region:'Yunnan',meal:['lunch','dinner'],mood:['comfort','hearty'],allergens:['soy','egg','fish'],diet:[],dislikes:[],spice:1,homeCook:false,art:'noodles',note:'Rice noodles with hot broth and a variety of toppings.',emoji:'🍜'},
+  {id:'stirfried-rice-cakes',porkRisk:true,cn:'炒年糕',en:'Stir-fried rice cakes',region:'Shanghai / East China',meal:['lunch','dinner'],mood:['comfort','hearty'],allergens:['soy','wheat'],diet:[],dislikes:[],spice:0,homeCook:true,art:'stirfry',note:'Chewy rice cakes in a savoury stir-fry; meat and sauce vary.',recipe:['Slice or separate rice cakes.','Stir-fry with vegetables and your chosen protein.','Add a little soy-based sauce and cook until tender.'],emoji:'🥘'},
+  {id:'hand-pulled-noodles',cn:'新疆拉条子',en:'Xinjiang hand-pulled noodles',region:'Xinjiang',meal:['lunch','dinner'],mood:['hearty','comfort'],allergens:['wheat','soy'],diet:[],dislikes:[],spice:1,homeCook:true,art:'noodles',note:'Springy noodles usually served with a tomato-and-pepper stir-fry.',recipe:['Boil fresh or dried wheat noodles.','Stir-fry tomato, pepper and chosen protein.','Toss together and season to taste.'],emoji:'🍜'},
+  {id:'lotus-root',cn:'桂花糯米藕',en:'Sweet sticky-rice lotus root',region:'Jiangnan',meal:['snack','dessert'],mood:['sweet','comfort'],allergens:[],diet:['vegetarian'],dislikes:['very-sweet'],spice:0,homeCook:true,art:'dessert',note:'Tender lotus root stuffed with sweet sticky rice.',recipe:['Fill lotus-root holes with soaked sticky rice.','Simmer until tender with a little sugar.','Slice and serve chilled or warm.'],emoji:'🍯'},
+  {id:'rice-rolls',porkRisk:true,cn:'肠粉',en:'Cantonese rice rolls',region:'Guangdong',meal:['breakfast','lunch'],mood:['comfort','fresh','lazy'],allergens:['soy','wheat','crustacean'],diet:[],dislikes:[],spice:0,homeCook:false,art:'street',note:'Soft rice rolls with a savoury sauce; fillings vary.',emoji:'🥢'},
+  {id:'cantonese-roast',cn:'烧鸭/烧鹅饭',en:'Cantonese roast meat rice',region:'Guangdong / Hong Kong',meal:['lunch','dinner'],mood:['hearty','comfort'],allergens:['soy','wheat'],diet:[],dislikes:[],spice:0,homeCook:false,art:'rice',note:'Roast meat over rice; check the exact meat and sauce.',emoji:'🍚'}
+];
+
+</script>
+<script>
+(() => {
+  'use strict';
+  const DB = Array.isArray(window.FOOD_DATABASE) ? window.FOOD_DATABASE : [];
+  const STORAGE_KEY = 'tinyFoodDatePicker_v2';
+  const ALLERGEN_LABELS = {
+    peanut: 'peanuts', 'tree-nut': 'tree nuts', sesame: 'sesame', soy: 'soy', wheat: 'wheat / gluten',
+    dairy: 'milk / dairy', egg: 'egg', fish: 'fish', crustacean: 'shrimp / crab', mollusc: 'clams / squid'
+  };
+  const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack / sweet' };
+  const MOODS = {
+    comfort: { emoji: '🫶', title: 'Comfort me', copy: 'Something cosy, warming and reassuring.' },
+    spicy: { emoji: '🌶️', title: 'Spicy chaos', copy: 'A little excitement and a little kick — within your spice limit.' },
+    fresh: { emoji: '🍃', title: 'Fresh & light', copy: 'Something bright and refreshing without feeling too heavy.' },
+    hearty: { emoji: '🍚', title: 'Properly hungry', copy: 'A proper meal that feels satisfying and worth the wait.' },
+    lazy: { emoji: '🛋️', title: 'Lazy mode', copy: 'Low effort, easy to order, and absolutely no pressure to cook.' },
+    sweet: { emoji: '🍓', title: 'Treat myself', copy: 'A little sweetness, dessert, or a small treat.' },
+    surprise: { emoji: '🎲', title: 'Surprise me', copy: 'No overthinking. Let the food universe make the call.' }
+  };
+  const emptyProfile = () => ({ hasAllergies: false, allergies: [], diet: [], spice: 2, dislikes: [] });
+  const defaultState = () => ({
+    meal: 'dinner', plan: 'takeout', mode: 'solo', person: 'me', mood: 'surprise',
+    profiles: { me: emptyProfile(), partner: emptyProfile() },
+    favorites: [], history: []
+  });
+  let state = loadState();
+  let selectedFood = null;
+  let seenThisRound = [];
+  let rerollsLeft = 2;
+  let hasSpun = false;
+  let isSpinning = false;
+  let toastTimer = null;
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  function loadState() {
+    const base = defaultState();
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('tinyFoodDatePicker_v1') || 'null');
+      if (!saved || typeof saved !== 'object') return base;
+      const profiles = saved.profiles || {};
+      const mergeProfile = key => ({ ...emptyProfile(), ...(profiles[key] || {}) });
+      return {
+        ...base,
+        meal: ['breakfast', 'lunch', 'dinner', 'snack'].includes(saved.meal) ? saved.meal : base.meal,
+        plan: ['takeout', 'restaurant', 'maybe-cook', 'cook'].includes(saved.plan) ? saved.plan : base.plan,
+        mode: ['solo', 'together'].includes(saved.mode) ? saved.mode : 'solo',
+        person: saved.person === 'partner' ? 'partner' : 'me',
+        mood: Object.prototype.hasOwnProperty.call(MOODS, saved.mood) ? saved.mood : 'surprise',
+        profiles: { me: mergeProfile('me'), partner: mergeProfile('partner') },
+        favorites: Array.isArray(saved.favorites) ? saved.favorites.filter(id => DB.some(f => f.id === id)) : [],
+        history: Array.isArray(saved.history) ? saved.history.filter(id => DB.some(f => f.id === id)).slice(0, 12) : []
+      };
+    } catch (_error) {
+      return base;
+    }
+  }
+
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_error) { /* App still works if browser storage is blocked. */ }
+  }
+
+  function toast(message) {
+    const el = $('#toast');
+    el.textContent = message;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  function showScreen(name) {
+    $$('.screen').forEach(el => el.classList.toggle('active', el.id === `screen-${name}`));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function foodById(id) { return DB.find(food => food.id === id); }
+  function imagePath(food) { return food ? (food.image || `food-images/${food.id}.svg`) : 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22440%22%20height%3D%22320%22%20viewBox%3D%220%200%20440%20320%22%20role%3D%22img%22%20aria-label%3D%22Illustration%20of%20Chinese%20hot%20pot%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23F3E1D4%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFF5E8%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22bowl%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23FFF9F0%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9C3A7%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22sauce%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23B44C3A%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9A077%22/%3E%3C/linearGradient%3E%0A%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22180%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%228%22/%3E%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%22440%22%20height%3D%22320%22%20rx%3D%2228%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%3Ccircle%20cx%3D%2246%22%20cy%3D%2252%22%20r%3D%2237%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.22%22/%3E%3Ccircle%20cx%3D%22391%22%20cy%3D%22270%22%20r%3D%2253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.18%22/%3E%0A%3Cpath%20d%3D%22M0%20252%20Q110%20228%20220%20255%20T440%20244%20L440%20320%20L0%20320%20Z%22%20fill%3D%22%23D9A077%22%20opacity%3D%22.12%22/%3E%0A%3Cellipse%20cx%3D%22222%22%20cy%3D%22252%22%20rx%3D%22138%22%20ry%3D%2220%22%20fill%3D%22%2366503D%22%20opacity%3D%22.15%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%3Cpath%20d%3D%22M88%20140%20Q103%20278%20220%20281%20Q338%20278%20353%20140%20Z%22%20fill%3D%22url%28%23bowl%29%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%224%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22145%22%20rx%3D%22134%22%20ry%3D%2257%22%20fill%3D%22%23F7F0E5%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%225%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22147%22%20rx%3D%22120%22%20ry%3D%2247%22%20fill%3D%22%23C95D3D%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22128%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22128%22%20rx%3D%2213%22%20ry%3D%2211%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22128%22%20rx%3D%2215%22%20ry%3D%227%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22270%22%20cy%3D%22128%22%20rx%3D%2214%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22157%22%20rx%3D%2216%22%20ry%3D%226%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22157%22%20rx%3D%2213%22%20ry%3D%228%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22157%22%20rx%3D%2214%22%20ry%3D%2210%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Ccircle%20cx%3D%22214%22%20cy%3D%22150%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22193%22%20cy%3D%22147%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22127%22%20cy%3D%22141%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22207%22%20cy%3D%22167%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22239%22%20cy%3D%22164%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22216%22%20cy%3D%22133%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22224%22%20cy%3D%22153%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22226%22%20cy%3D%22149%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22177%22%20cy%3D%22157%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22131%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22155%22%20cy%3D%22116%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22285%22%20cy%3D%22149%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22229%22%20cy%3D%22124%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Cpath%20d%3D%22M270%2046%20L355%20185%22%20stroke%3D%22%238D573B%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M287%2039%20L369%20177%22%20stroke%3D%22%23BF8B5A%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M53%20125%20Q55%20130%2060%20132%20Q55%20134%2053%20139%20Q51%20134%2046%20132%20Q51%20130%2053%20125%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M372%2077%20Q374%2082%20379%2084%20Q374%2086%20372%2091%20Q370%2086%20365%2084%20Q370%2082%20372%2077%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M68%20253%20Q70%20258%2075%20260%20Q70%20262%2068%20267%20Q66%20262%2061%20260%20Q66%20258%2068%20253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M356%20245%20Q358%20250%20363%20252%20Q358%20254%20356%20259%20Q354%20254%20349%20252%20Q354%20250%20356%20245%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3C/svg%3E'; }
+
+  function selectCardGroup(groupSelector, attrName, value) {
+    $$(groupSelector).forEach(button => {
+      const selected = button.dataset[attrName] === value;
+      button.classList.toggle('selected', selected);
+      if (button.hasAttribute('aria-selected')) button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+  }
+
+  function renderModeControls() {
+    if (state.mode === 'solo') state.person = 'me';
+    selectCardGroup('#mode-options [data-mode]', 'mode', state.mode);
+    $$('#mode-options [data-mode]').forEach(button => {
+      button.setAttribute('aria-pressed', button.dataset.mode === state.mode ? 'true' : 'false');
+    });
+    $('.profile-tabs').classList.toggle('hidden', state.mode !== 'together');
+    selectCardGroup('.profile-tabs [data-person]', 'person', state.person);
+    $('#profile-heading').textContent = state.mode === 'solo'
+      ? 'Your preferences'
+      : (state.person === 'me' ? 'Person 1 preferences' : 'Person 2 preferences');
+    $('#profile-desc').textContent = state.mode === 'solo'
+      ? 'Only your preferences will shape the food suggestions.'
+      : 'Set both people’s needs; suggestions must work for both.';
+  }
+
+  function renderBasicSettings() {
+    selectCardGroup('#meal-options [data-meal]', 'meal', state.meal);
+    selectCardGroup('#plan-options [data-plan]', 'plan', state.plan);
+    renderModeControls();
+    $$('.spice-button').forEach(button => {
+      button.classList.toggle('selected', Number(button.dataset.spice) === state.profiles[state.person].spice);
+    });
+    $('#favorite-count').textContent = state.favorites.length;
+  }
+
+  function renderPreferenceControls() {
+    renderModeControls();
+    const profile = state.profiles[state.person];
+    $('#allergy-toggle').checked = !!profile.hasAllergies;
+    $('#allergy-options').classList.toggle('hidden', !profile.hasAllergies);
+    $$('#allergy-checks input').forEach(input => { input.checked = profile.allergies.includes(input.value); });
+    $('#pork-free-toggle').checked = profile.diet.includes('pork');
+    $$('#diet-checks input').forEach(input => { input.checked = profile.diet.includes(input.value); });
+    $$('#dislike-checks input').forEach(input => { input.checked = profile.dislikes.includes(input.value); });
+    $$('.spice-button').forEach(button => button.classList.toggle('selected', Number(button.dataset.spice) === profile.spice));
+    $('#favorite-count').textContent = state.favorites.length;
+  }
+
+  function selectedValues(containerSelector) {
+    return $$(containerSelector + ' input:checked').map(input => input.value);
+  }
+
+  function renderMood() {
+    selectCardGroup('#mood-options [data-mood]', 'mood', state.mood);
+    const mood = MOODS[state.mood] || MOODS.surprise;
+    const solo = state.mode === 'solo';
+    $('#mood-side-emoji').textContent = mood.emoji;
+    $('#mood-side-title').textContent = state.mood === 'surprise'
+      ? (solo ? 'One hungry person. One delicious answer.' : 'Two people. One delicious answer.')
+      : mood.title + '.';
+    $('#mood-side-copy').textContent = state.mood === 'surprise'
+      ? (solo ? 'No more scrolling endlessly and still not knowing what to order.' : 'No more “anything is fine” followed by rejecting every suggestion.')
+      : mood.copy;
+    $('#mood-side-note').textContent = solo ? 'MADE FOR YOUR NEXT CRAVING ♡' : 'MADE FOR SHARED MEAL DECISIONS ♡';
+  }
+
+  function effectivePreferences() {
+    const profiles = state.mode === 'together'
+      ? [state.profiles.me, state.profiles.partner]
+      : [state.profiles.me];
+    const allergies = new Set();
+    const diet = new Set();
+    const dislikes = new Set();
+    profiles.forEach(profile => {
+      if (profile.hasAllergies) profile.allergies.forEach(value => allergies.add(value));
+      profile.diet.forEach(value => diet.add(value));
+      profile.dislikes.forEach(value => dislikes.add(value));
+    });
+    return {
+      allergies: Array.from(allergies),
+      diet: Array.from(diet),
+      dislikes: Array.from(dislikes),
+      maxSpice: Math.min(...profiles.map(profile => Number.isFinite(profile.spice) ? profile.spice : 2))
+    };
+  }
+
+  function mealMatches(food) {
+    if (state.meal === 'snack') return food.meal.some(tag => ['snack', 'dessert', 'drink'].includes(tag));
+    return food.meal.includes(state.meal);
+  }
+
+  function getEligiblePool() {
+    const prefs = effectivePreferences();
+    return DB.filter(food => {
+      if (!mealMatches(food)) return false;
+      if (state.plan === 'cook' && !food.homeCook) return false;
+      if (food.allergens.some(allergen => prefs.allergies.includes(allergen))) return false;
+      if (prefs.diet.includes('vegetarian') && !food.diet.includes('vegetarian')) return false;
+      const nonVegAvoids = prefs.diet.filter(value => value !== 'vegetarian');
+      if (food.diet.some(tag => nonVegAvoids.includes(tag))) return false;
+      // The pork-free switch also excludes dishes that are commonly prepared with pork,
+      // even where a restaurant may offer a different variant. This is a conservative cue, not a safety guarantee.
+      if (prefs.diet.includes('pork') && food.porkRisk === true) return false;
+      if (food.dislikes.some(tag => prefs.dislikes.includes(tag))) return false;
+      if (food.spice > prefs.maxSpice) return false;
+      return true;
+    });
+  }
+
+  function weightedPick(pool) {
+    const mood = state.mood;
+    const weights = pool.map(food => {
+      let weight = 1;
+      if (mood !== 'surprise' && food.mood.includes(mood)) weight += 3.2;
+      if (state.plan === 'maybe-cook' && food.homeCook) weight *= 0.32;
+      if (state.meal === 'snack' && ['dessert', 'drink'].some(tag => food.meal.includes(tag))) weight *= 1.1;
+      return Math.max(0.05, weight);
+    });
+    const total = weights.reduce((sum, value) => sum + value, 0);
+    let r = Math.random() * total;
+    for (let index = 0; index < pool.length; index++) {
+      r -= weights[index];
+      if (r <= 0) return pool[index];
+    }
+    return pool[pool.length - 1];
+  }
+
+  function renderSpinFood(food) {
+    if (!food) return;
+    $('#spin-image').src = imagePath(food);
+    $('#spin-image').alt = `${food.en} offline illustration`;
+    $('#spin-name-cn').textContent = food.cn;
+    $('#spin-name-en').textContent = food.en;
+    $('#spin-region').textContent = food.region;
+  }
+
+  function setRerollCounter() {
+    const dots = $$('.reroll-dot');
+    dots.forEach((dot, i) => dot.classList.toggle('used', i >= rerollsLeft));
+    const label = $('#reroll-counter span:last-child');
+    label.textContent = `${rerollsLeft} left`;
+    $('#reroll-button').disabled = rerollsLeft <= 0 || isSpinning;
+    $('#reroll-button').textContent = rerollsLeft > 0 ? '↻ Shuffle again' : 'No rerolls left';
+  }
+
+  function prepareSpinScreen() {
+    selectedFood = null;
+    seenThisRound = [];
+    rerollsLeft = 2;
+    hasSpun = false;
+    isSpinning = false;
+    $('#spin-card').classList.remove('spinning');
+    $('#back-mood').disabled = false;
+    $('#spin-button').classList.remove('hidden');
+    $('#spin-button').disabled = false;
+    $('#result-detail').classList.remove('visible');
+    $('#done-message').classList.remove('visible');
+    $('#cook-recipe').classList.add('hidden');
+    $('#empty-pool').classList.add('hidden');
+    $('#roulette-area').classList.remove('hidden');
+    $('#spin-button').innerHTML = state.mode === 'solo'
+      ? 'Spin for my food <span>🎲</span>'
+      : 'Spin for our food <span>🎲</span>'; 
+    $('#accept-pick').textContent = state.mode === 'solo' ? 'I’ll pick this ♡' : 'We’ll pick this ♡';
+    $('#spin-image').src = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22440%22%20height%3D%22320%22%20viewBox%3D%220%200%20440%20320%22%20role%3D%22img%22%20aria-label%3D%22Illustration%20of%20Chinese%20hot%20pot%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23F3E1D4%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFF5E8%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22bowl%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23FFF9F0%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9C3A7%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22sauce%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23B44C3A%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9A077%22/%3E%3C/linearGradient%3E%0A%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22180%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%228%22/%3E%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%22440%22%20height%3D%22320%22%20rx%3D%2228%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%3Ccircle%20cx%3D%2246%22%20cy%3D%2252%22%20r%3D%2237%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.22%22/%3E%3Ccircle%20cx%3D%22391%22%20cy%3D%22270%22%20r%3D%2253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.18%22/%3E%0A%3Cpath%20d%3D%22M0%20252%20Q110%20228%20220%20255%20T440%20244%20L440%20320%20L0%20320%20Z%22%20fill%3D%22%23D9A077%22%20opacity%3D%22.12%22/%3E%0A%3Cellipse%20cx%3D%22222%22%20cy%3D%22252%22%20rx%3D%22138%22%20ry%3D%2220%22%20fill%3D%22%2366503D%22%20opacity%3D%22.15%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%3Cpath%20d%3D%22M88%20140%20Q103%20278%20220%20281%20Q338%20278%20353%20140%20Z%22%20fill%3D%22url%28%23bowl%29%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%224%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22145%22%20rx%3D%22134%22%20ry%3D%2257%22%20fill%3D%22%23F7F0E5%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%225%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22147%22%20rx%3D%22120%22%20ry%3D%2247%22%20fill%3D%22%23C95D3D%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22128%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22128%22%20rx%3D%2213%22%20ry%3D%2211%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22128%22%20rx%3D%2215%22%20ry%3D%227%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22270%22%20cy%3D%22128%22%20rx%3D%2214%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22157%22%20rx%3D%2216%22%20ry%3D%226%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22157%22%20rx%3D%2213%22%20ry%3D%228%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22157%22%20rx%3D%2214%22%20ry%3D%2210%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Ccircle%20cx%3D%22214%22%20cy%3D%22150%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22193%22%20cy%3D%22147%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22127%22%20cy%3D%22141%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22207%22%20cy%3D%22167%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22239%22%20cy%3D%22164%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22216%22%20cy%3D%22133%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22224%22%20cy%3D%22153%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22226%22%20cy%3D%22149%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22177%22%20cy%3D%22157%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22131%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22155%22%20cy%3D%22116%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22285%22%20cy%3D%22149%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22229%22%20cy%3D%22124%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Cpath%20d%3D%22M270%2046%20L355%20185%22%20stroke%3D%22%238D573B%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M287%2039%20L369%20177%22%20stroke%3D%22%23BF8B5A%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M53%20125%20Q55%20130%2060%20132%20Q55%20134%2053%20139%20Q51%20134%2046%20132%20Q51%20130%2053%20125%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M372%2077%20Q374%2082%20379%2084%20Q374%2086%20372%2091%20Q370%2086%20365%2084%20Q370%2082%20372%2077%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M68%20253%20Q70%20258%2075%20260%20Q70%20262%2068%20267%20Q66%20262%2061%20260%20Q66%20258%2068%20253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M356%20245%20Q358%20250%20363%20252%20Q358%20254%20356%20259%20Q354%20254%20349%20252%20Q354%20250%20356%20245%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3C/svg%3E';
+    $('#spin-name-cn').textContent = '准备好了吗？';
+    $('#spin-name-en').textContent = 'Ready to find something yummy?';
+    $('#spin-region').textContent = 'YOUR NEXT MEAL';
+    const pool = getEligiblePool();
+    const mealLabel = MEAL_LABELS[state.meal] || 'Food';
+    $('#filter-count').textContent = `${pool.length} ${pool.length === 1 ? 'idea fits' : 'ideas fit'} your ${mealLabel.toLowerCase()} filters.`;
+    $('#spin-subtitle').textContent = state.plan === 'cook'
+      ? 'We’ll find a home-cookable dish and give you a simple starting recipe.'
+      : (state.mode === 'solo'
+        ? 'A little spin, a tiny bit of suspense, and one less decision to make.'
+        : 'A little spin, a tiny bit of suspense, and one less decision to make together.');
+    setRerollCounter();
+    if (pool.length === 0) {
+      $('#empty-pool').classList.remove('hidden');
+      $('#roulette-area').classList.add('hidden');
+    }
+  }
+
+  function renderResult(food) {
+    $('#result-title').textContent = `${food.cn} — this could be the one.`;
+    $('#result-note').textContent = food.note;
+    const tags = [];
+    tags.push(food.region);
+    tags.push(food.spice === 0 ? 'Mild' : food.spice === 1 ? 'A little kick' : food.spice === 2 ? 'Spicy' : 'Very spicy');
+    if (food.homeCook) tags.push('Can cook at home');
+    if (food.meal.includes('breakfast')) tags.push('Breakfast-friendly');
+    $('#dish-tags').replaceChildren(...tags.map(tag => {
+      const span = document.createElement('span');
+      span.className = 'dish-tag'; span.textContent = tag; return span;
+    }));
+    if (state.plan === 'cook' && Array.isArray(food.recipe) && food.recipe.length) {
+      $('#recipe-steps').replaceChildren(...food.recipe.map(line => {
+        const li = document.createElement('li'); li.textContent = line; return li;
+      }));
+      $('#cook-recipe').classList.remove('hidden');
+    } else {
+      $('#cook-recipe').classList.add('hidden');
+    }
+    const isSaved = state.favorites.includes(food.id);
+    $('#save-favorite').textContent = isSaved ? '♥ Saved favourite' : '♡ Save favourite';
+    $('#accept-pick').textContent = state.mode === 'solo' ? 'I’ll pick this ♡' : 'We’ll pick this ♡';
+    $('#result-detail').classList.add('visible');
+    $('#done-message').classList.remove('visible');
+    $('#spin-button').classList.add('hidden');
+    $('#spin-card').classList.remove('spinning');
+    setRerollCounter();
+  }
+
+  function runSpin(isReroll = false) {
+    if (isSpinning) return;
+    const pool = getEligiblePool();
+    if (!pool.length) {
+      $('#empty-pool').classList.remove('hidden');
+      $('#roulette-area').classList.add('hidden');
+      return;
+    }
+    if (isReroll && rerollsLeft <= 0) {
+      toast('No rerolls left this round. You can start a new round ♡');
+      return;
+    }
+    if (isReroll) {
+      rerollsLeft -= 1;
+      setRerollCounter();
+    }
+    isSpinning = true;
+    $('#back-mood').disabled = true;
+    $('#spin-button').disabled = true;
+    $('#reroll-button').disabled = true;
+    $('#result-detail').classList.remove('visible');
+    $('#done-message').classList.remove('visible');
+    $('#spin-card').classList.add('spinning');
+
+    let candidates = pool.filter(food => !seenThisRound.includes(food.id));
+    if (!candidates.length) {
+      candidates = pool;
+      if (pool.length === 1) toast('This is the only match that fits every filter.');
+      else toast('You’ve seen the whole shortlist — duplicates are possible now.');
+    }
+    // Gently reduce repeats from the last few chosen meals when there are plenty of alternatives.
+    if (candidates.length > 5) {
+      const fresh = candidates.filter(food => !state.history.slice(0, 5).includes(food.id));
+      if (fresh.length >= 3) candidates = fresh;
+    }
+    const winner = weightedPick(candidates);
+    let tick = 0;
+    const maxTicks = 25;
+    const timerTick = () => {
+      if (tick < maxTicks - 1) {
+        const preview = pool[Math.floor(Math.random() * pool.length)];
+        renderSpinFood(preview);
+        tick += 1;
+        const delay = 48 + tick * tick * 0.30;
+        setTimeout(timerTick, delay);
+        return;
+      }
+      renderSpinFood(winner);
+      selectedFood = winner;
+      seenThisRound.push(winner.id);
+      hasSpun = true;
+      isSpinning = false;
+      $('#back-mood').disabled = false;
+      $('#spin-button').disabled = false;
+      renderResult(winner);
+      setRerollCounter();
+    };
+    timerTick();
+  }
+
+  function saveFavorite(food) {
+    if (!food) return;
+    const index = state.favorites.indexOf(food.id);
+    if (index >= 0) {
+      state.favorites.splice(index, 1);
+      toast('Removed from your saved cravings.');
+    } else {
+      state.favorites.unshift(food.id);
+      toast('Saved for another hungry day ♡');
+    }
+    persist();
+    $('#favorite-count').textContent = state.favorites.length;
+    $('#save-favorite').textContent = state.favorites.includes(food.id) ? '♥ Saved favourite' : '♡ Save favourite';
+    if ($('#favorites-dialog').open) renderFavorites();
+  }
+
+  function renderFavorites() {
+    const list = $('#favorites-list');
+    list.replaceChildren();
+    const foods = state.favorites.map(foodById).filter(Boolean);
+    if (!foods.length) {
+      const empty = document.createElement('div');
+      empty.className = 'no-favs';
+      empty.textContent = 'No saved cravings yet. When a dish looks good, tap “Save favourite” and it will live here.';
+      list.appendChild(empty);
+      return;
+    }
+    foods.forEach(food => {
+      const row = document.createElement('div'); row.className = 'favorite-row';
+      const img = document.createElement('img'); img.src = imagePath(food); img.alt = `${food.en} illustration`;
+      const main = document.createElement('div'); main.className = 'favorite-main';
+      const strong = document.createElement('strong'); strong.textContent = food.cn;
+      const sub = document.createElement('span'); sub.textContent = food.en;
+      main.append(strong, sub);
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-fav'; remove.textContent = 'Remove';
+      remove.addEventListener('click', () => {
+        state.favorites = state.favorites.filter(id => id !== food.id);
+        persist(); renderFavorites(); renderBasicSettings();
+        if (selectedFood && selectedFood.id === food.id) $('#save-favorite').textContent = '♡ Save favourite';
+      });
+      row.append(img, main, remove); list.appendChild(row);
+    });
+  }
+
+  function currentAppUrl() {
+    return location.protocol === 'http:' || location.protocol === 'https:' ? location.href : '';
+  }
+
+  async function shareContent(title, message, includeAppUrl = true) {
+    const url = includeAppUrl ? currentAppUrl() : '';
+    if (navigator.share) {
+      try {
+        const payload = { title, text: message };
+        if (url) payload.url = url;
+        await navigator.share(payload);
+        return;
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+      }
+    }
+    const copyText = url ? `${message}\n\nTry the food picker: ${url}` : message;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(copyText);
+        toast('Copied — ready to send ♡');
+        return;
+      }
+    } catch (_error) { /* Use the manual fallback below. */ }
+    const helper = document.createElement('textarea');
+    helper.value = copyText;
+    helper.setAttribute('readonly', '');
+    helper.style.position = 'fixed'; helper.style.opacity = '0';
+    document.body.appendChild(helper); helper.select();
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch (_error) { /* Manual copy prompt below. */ }
+    helper.remove();
+    if (copied) toast('Copied — ready to send ♡');
+    else window.prompt('Copy this message to share:', copyText);
+  }
+
+  function shareApp() {
+    const url = currentAppUrl();
+    if (!url) {
+      toast('Publish the project online first, then this button can share its link.');
+      return;
+    }
+    shareContent('今晚吃什么？ — What Are We Eating?', 'A little Chinese food picker for your next craving. Open the link, set your own preferences and spin for a dish.');
+  }
+
+  function sharePick() {
+    if (!selectedFood) {
+      toast('Spin for a dish first, then share your pick.');
+      return;
+    }
+    const lead = state.mode === 'solo' ? 'Food idea for you' : 'Food idea for us';
+    const message = `${lead}: ${selectedFood.cn} — ${selectedFood.en}. ${selectedFood.note}`;
+    shareContent('Food pick: ' + selectedFood.en, message);
+  }
+
+  function confirmPick() {
+    if (!selectedFood) return;
+    state.history = [selectedFood.id, ...state.history.filter(id => id !== selectedFood.id)].slice(0, 12);
+    persist();
+    const message = state.mode === 'solo'
+      ? `Decision made ✨ 今晚吃 ${selectedFood.cn} (${selectedFood.en}). That's your next meal sorted!`
+      : `Decision made 💗 今晚吃 ${selectedFood.cn} (${selectedFood.en}). Send this pick to the other person and enjoy!`;
+    $('#done-message').textContent = message;
+    $('#done-message').classList.add('visible');
+    toast('A decision has been made. Victory!');
+  }
+
+  function resetPreferences() {
+    const keep = { favorites: state.favorites.slice(), history: state.history.slice() };
+    state = defaultState();
+    state.favorites = keep.favorites;
+    state.history = keep.history;
+    persist();
+    renderBasicSettings();
+    renderPreferenceControls();
+    renderMood();
+    toast('Preferences reset. Your favourites are still saved.');
+  }
+
+  // Who is the picker for? Solo mode only uses Person 1's preferences; together mode combines both.
+  $$('#mode-options [data-mode]').forEach(button => button.addEventListener('click', () => {
+    state.mode = button.dataset.mode;
+    if (state.mode === 'solo') state.person = 'me';
+    persist();
+    renderBasicSettings();
+    renderPreferenceControls();
+    renderMood();
+  }));
+
+  // Meal and plan selectors.
+  $$('#meal-options [data-meal]').forEach(button => button.addEventListener('click', () => {
+    state.meal = button.dataset.meal; persist(); renderBasicSettings();
+  }));
+  $$('#plan-options [data-plan]').forEach(button => button.addEventListener('click', () => {
+    state.plan = button.dataset.plan; persist(); renderBasicSettings();
+  }));
+
+  // Which person's profile is being edited.
+  $$('.people-tabs [data-person]').forEach(button => button.addEventListener('click', () => {
+    state.person = button.dataset.person; persist(); renderPreferenceControls();
+  }));
+  $('#allergy-toggle').addEventListener('change', event => {
+    state.profiles[state.person].hasAllergies = event.target.checked;
+    persist(); renderPreferenceControls();
+  });
+  $$('#allergy-checks input').forEach(input => input.addEventListener('change', () => {
+    state.profiles[state.person].allergies = selectedValues('#allergy-checks');
+    // Selecting an allergy automatically turns the profile's allergy flag on.
+    if (state.profiles[state.person].allergies.length) state.profiles[state.person].hasAllergies = true;
+    persist(); renderPreferenceControls();
+  }));
+  $('#pork-free-toggle').addEventListener('change', event => {
+    const profile = state.profiles[state.person];
+    const diet = new Set(profile.diet);
+    if (event.target.checked) diet.add('pork');
+    else diet.delete('pork');
+    profile.diet = Array.from(diet);
+    persist();
+    renderPreferenceControls();
+  });
+  $$('#diet-checks input').forEach(input => input.addEventListener('change', () => {
+    state.profiles[state.person].diet = [
+      ...selectedValues('#diet-checks'),
+      ...(state.profiles[state.person].diet.includes('pork') ? ['pork'] : [])
+    ];
+    persist();
+  }));
+  $$('#dislike-checks input').forEach(input => input.addEventListener('change', () => {
+    state.profiles[state.person].dislikes = selectedValues('#dislike-checks');
+    persist();
+  }));
+  $$('.spice-button').forEach(button => button.addEventListener('click', () => {
+    state.profiles[state.person].spice = Number(button.dataset.spice);
+    persist(); renderPreferenceControls();
+  }));
+
+  $$('#mood-options [data-mood]').forEach(button => button.addEventListener('click', () => {
+    state.mood = button.dataset.mood; persist(); renderMood();
+  }));
+  $('#to-mood').addEventListener('click', () => {
+    const profileKeys = state.mode === 'together' ? ['me', 'partner'] : ['me'];
+    const incompleteAllergyProfile = profileKeys.some(key => state.profiles[key].hasAllergies && state.profiles[key].allergies.length === 0);
+    if (incompleteAllergyProfile) {
+      toast('For anyone marked as having allergies, select the allergy types first.');
+      return;
+    }
+    renderMood(); showScreen('mood');
+  });
+  $('#back-setup').addEventListener('click', () => showScreen('setup'));
+  $('#to-spin').addEventListener('click', () => {
+    if (!state.mood) state.mood = 'surprise';
+    prepareSpinScreen(); showScreen('spin');
+  });
+  $('#back-mood').addEventListener('click', () => { showScreen('mood'); });
+  $('#spin-button').addEventListener('click', () => runSpin(false));
+  $('#reroll-button').addEventListener('click', () => runSpin(true));
+  $('#accept-pick').addEventListener('click', confirmPick);
+  $('#save-favorite').addEventListener('click', () => saveFavorite(selectedFood));
+  $('#share-pick').addEventListener('click', sharePick);
+  $('#share-app').addEventListener('click', shareApp);
+  $('#edit-filters').addEventListener('click', () => showScreen('setup'));
+  $('#reset-settings').addEventListener('click', resetPreferences);
+
+  $('#open-favorites').addEventListener('click', () => {
+    renderFavorites();
+    const dialog = $('#favorites-dialog');
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  });
+  $('#close-favorites').addEventListener('click', () => {
+    const dialog = $('#favorites-dialog');
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  });
+  $('#favorites-dialog').addEventListener('click', event => {
+    if (event.target === $('#favorites-dialog')) {
+      const dialog = $('#favorites-dialog');
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
+    }
+  });
+
+  renderBasicSettings();
+  renderPreferenceControls();
+  renderMood();
+  $('#favorite-count').textContent = state.favorites.length;
+
+  // When hosted on HTTPS, cache the app shell for repeat offline use. file:// use already loads local assets directly.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  }
+})();
+
+</script>
+</body>
+</html>
