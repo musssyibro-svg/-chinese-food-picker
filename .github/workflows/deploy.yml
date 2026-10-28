@@ -54,6 +54,12 @@ jobs:
           test -s _site/food-images/noodles.jpg
           test -s _site/food-images/stirfry.jpg
           test -s _site/food-images/dessert.jpg
+
+          # Validate every packaged photo, not only a few representative files.
+          for photo in _site/food-images/*.jpg; do
+            test -s "$photo"
+            file "$photo" | grep -q 'JPEG image data'
+          done
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
