@@ -948,7 +948,7 @@ window.FOOD_DATABASE = [
   function renderModeControls() {
     if (state.mode === 'solo') state.person = 'me';
     selectCardGroup('#mode-options [data-mode]', 'mode', state.mode);
-    $('#mode-options [data-mode]').forEach(button => {
+    $( '#mode-options [data-mode]').forEach(button => {
       button.setAttribute('aria-pressed', button.dataset.mode === state.mode ? 'true' : 'false');
     });
     $('.profile-tabs').classList.toggle('hidden', state.mode !== 'together');
@@ -965,7 +965,7 @@ window.FOOD_DATABASE = [
     selectCardGroup('#meal-options [data-meal]', 'meal', state.meal);
     selectCardGroup('#plan-options [data-plan]', 'plan', state.plan);
     renderModeControls();
-    $('.spice-button').forEach(button => {
+    $( '.spice-button').forEach(button => {
       button.classList.toggle('selected', Number(button.dataset.spice) === state.profiles[state.person].spice);
     });
     $('#favorite-count').textContent = state.favorites.length;
@@ -976,11 +976,11 @@ window.FOOD_DATABASE = [
     const profile = state.profiles[state.person];
     $('#allergy-toggle').checked = !!profile.hasAllergies;
     $('#allergy-options').classList.toggle('hidden', !profile.hasAllergies);
-    $('#allergy-checks input').forEach(input => { input.checked = profile.allergies.includes(input.value); });
+    $( '#allergy-checks input').forEach(input => { input.checked = profile.allergies.includes(input.value); });
     $('#pork-free-toggle').checked = profile.diet.includes('pork');
-    $('#diet-checks input').forEach(input => { input.checked = profile.diet.includes(input.value); });
-    $('#dislike-checks input').forEach(input => { input.checked = profile.dislikes.includes(input.value); });
-    $('.spice-button').forEach(button => button.classList.toggle('selected', Number(button.dataset.spice) === profile.spice));
+    $( '#diet-checks input').forEach(input => { input.checked = profile.diet.includes(input.value); });
+    $( '#dislike-checks input').forEach(input => { input.checked = profile.dislikes.includes(input.value); });
+    $( '.spice-button').forEach(button => button.classList.toggle('selected', Number(button.dataset.spice) === profile.spice));
     $('#favorite-count').textContent = state.favorites.length;
   }
 
