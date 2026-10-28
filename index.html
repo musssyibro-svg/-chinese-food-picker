@@ -251,7 +251,7 @@
       </div>
       <div class="top-actions">
         <button class="icon-button language-button" id="language-toggle" type="button" aria-label="Switch language">EN</button>
-        <div class="offline-pill" title="Food data and illustrations are bundled with the app"><span class="offline-dot"></span> Works offline</div>
+        <div class="offline-pill" title="The app and food photos are cached for offline use after the first visit"><span class="offline-dot"></span> Works offline</div>
         <button class="icon-button" id="share-app" type="button" aria-label="Share this food picker">↗ <span>Share app</span></button>
         <button class="icon-button" id="open-favorites" type="button" aria-label="Open favorite dishes">♡ <span id="favorite-count">0</span></button>
       </div>
@@ -718,136 +718,12 @@ window.FOOD_DATABASE = [
   }
 
   function foodById(id) { return DB.find(food => food.id === id); }
-  // Real food photography is used instead of the missing food-images/*.svg files.
-  const FOOD_PHOTOS = {
-    dumpling: 'https://images.pexels.com/photos/6752827/pexels-photo-6752827.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    drink: 'https://specials-images.forbesimg.com/imageserve/64dca6cefecf8016cdb1ea3f/960x0.jpg',
-    street: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
-    egg: 'https://assets.epicurious.com/photos/6239fdf9ebb0382416abaf03/1%3A1/w_1600%2Cc_limit/HongKongEggTarts_RECIPE_IG_031722_30182.jpg',
-    soup: 'https://media.cntraveller.com/photos/65afbd1f82757337b9631bef/master/w_1024%2Cc_limit/Kung%2520Fu%2520Noodle_Beef%2520Noodles_%2520jan24-pr-global-Shot%2520by%2520Nic%2520Crilly%2520Hargrave.jpg',
-    noodles: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    rice: 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    stirfry: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
-    tofu: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
-    fish: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
-    skewer: 'https://s.hdnux.com/photos/01/33/62/66/24063381/5/ratio3x2_1920.jpg',
-    greens: 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    dessert: 'https://assets.epicurious.com/photos/6239fdf9ebb0382416abaf03/1%3A1/w_1600%2Cc_limit/HongKongEggTarts_RECIPE_IG_031722_30182.jpg'
-  };
-  const FALLBACK_FOOD_PHOTOS = [
-    'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
-    'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=1200'
-  ];
+  // Food photos are packaged into the Pages site during deployment and served locally.
+  const FOOD_PHOTO_CATEGORIES = new Set(['dumpling','drink','street','egg','soup','noodles','rice','stirfry','tofu','fish','skewer','greens','dessert']);
+  const FALLBACK_FOOD_PHOTOS = ['food-images/chinese-feast.jpg','food-images/noodles.jpg'];
   function imagePath(food) {
-    return food ? (food.image || FOOD_PHOTOS[food.art] || FOOD_PHOTOS.stirfry) : FOOD_PHOTOS.stirfry;
-  }
-
-  function selectCardGroup(groupSelector, attrName, value) {
-    $$(groupSelector).forEach(button => {
-      const selected = button.dataset[attrName] === value;
-      button.classList.toggle('selected', selected);
-      if (button.hasAttribute('aria-selected')) button.setAttribute('aria-selected', selected ? 'true' : 'false');
-    });
-  }
-
-  function renderModeControls() {
-    if (state.mode === 'solo') state.person = 'me';
-    selectCardGroup('#mode-options [data-mode]', 'mode', state.mode);
-    $$('#mode-options [data-mode]').forEach(button => {
-      button.setAttribute('aria-pressed', button.dataset.mode === state.mode ? 'true' : 'false');
-    });
-    $('.profile-tabs').classList.toggle('hidden', state.mode !== 'together');
-    selectCardGroup('.profile-tabs [data-person]', 'person', state.person);
-    $('#profile-heading').textContent = state.mode === 'solo'
-      ? 'Your preferences'
-      : (state.person === 'me' ? 'Person 1 preferences' : 'Person 2 preferences');
-    $('#profile-desc').textContent = state.mode === 'solo'
-      ? 'Only your preferences will shape the food suggestions.'
-      : 'Set both people’s needs; suggestions must work for both.';
-  }
-
-  function renderBasicSettings() {
-    selectCardGroup('#meal-options [data-meal]', 'meal', state.meal);
-    selectCardGroup('#plan-options [data-plan]', 'plan', state.plan);
-    renderModeControls();
-    $$('.spice-button').forEach(button => {
-      button.classList.toggle('selected', Number(button.dataset.spice) === state.profiles[state.person].spice);
-    });
-    $('#favorite-count').textContent = state.favorites.length;
-  }
-
-  function renderPreferenceControls() {
-    renderModeControls();
-    const profile = state.profiles[state.person];
-    $('#allergy-toggle').checked = !!profile.hasAllergies;
-    $('#allergy-options').classList.toggle('hidden', !profile.hasAllergies);
-    $$('#allergy-checks input').forEach(input => { input.checked = profile.allergies.includes(input.value); });
-    $('#pork-free-toggle').checked = profile.diet.includes('pork');
-    $$('#diet-checks input').forEach(input => { input.checked = profile.diet.includes(input.value); });
-    $$('#dislike-checks input').forEach(input => { input.checked = profile.dislikes.includes(input.value); });
-    $$('.spice-button').forEach(button => button.classList.toggle('selected', Number(button.dataset.spice) === profile.spice));
-    $('#favorite-count').textContent = state.favorites.length;
-  }
-
-  function selectedValues(containerSelector) {
-    return $$(containerSelector + ' input:checked').map(input => input.value);
-  }
-
-  function renderMood() {
-    selectCardGroup('#mood-options [data-mood]', 'mood', state.mood);
-    const mood = MOODS[state.mood] || MOODS.surprise;
-    const solo = state.mode === 'solo';
-    $('#mood-side-emoji').textContent = mood.emoji;
-    $('#mood-side-title').textContent = state.mood === 'surprise'
-      ? (solo ? 'One hungry person. One delicious answer.' : 'Two people. One delicious answer.')
-      : mood.title + '.';
-    $('#mood-side-copy').textContent = state.mood === 'surprise'
-      ? (solo ? 'No more scrolling endlessly and still not knowing what to order.' : 'No more “anything is fine” followed by rejecting every suggestion.')
-      : mood.copy;
-    $('#mood-side-note').textContent = solo ? 'MADE FOR YOUR NEXT CRAVING ♡' : 'MADE FOR SHARED MEAL DECISIONS ♡';
-  }
-
-  function effectivePreferences() {
-    const profiles = state.mode === 'together'
-      ? [state.profiles.me, state.profiles.partner]
-      : [state.profiles.me];
-    const allergies = new Set();
-    const diet = new Set();
-    const dislikes = new Set();
-    profiles.forEach(profile => {
-      if (profile.hasAllergies) profile.allergies.forEach(value => allergies.add(value));
-      profile.diet.forEach(value => diet.add(value));
-      profile.dislikes.forEach(value => dislikes.add(value));
-    });
-    return {
-      allergies: Array.from(allergies),
-      diet: Array.from(diet),
-      dislikes: Array.from(dislikes),
-      maxSpice: Math.min(...profiles.map(profile => Number.isFinite(profile.spice) ? profile.spice : 2))
-    };
-  }
-
-  function mealMatches(food) {
-    if (state.meal === 'snack') return food.meal.some(tag => ['snack', 'dessert', 'drink'].includes(tag));
-    return food.meal.includes(state.meal);
-  }
-
-  function getEligiblePool() {
-    const prefs = effectivePreferences();
-    return DB.filter(food => {
-      if (!mealMatches(food)) return false;
-      if (state.plan === 'cook' && !food.homeCook) return false;
-      if (food.allergens.some(allergen => prefs.allergies.includes(allergen))) return false;
-      if (prefs.diet.includes('vegetarian') && !food.diet.includes('vegetarian')) return false;
-      const nonVegAvoids = prefs.diet.filter(value => value !== 'vegetarian');
-      if (food.diet.some(tag => nonVegAvoids.includes(tag))) return false;
-      // The pork-free switch also excludes dishes that are commonly prepared with pork,
-      // even where a restaurant may offer a different variant. This is a conservative cue, not a safety guarantee.
-      if (prefs.diet.includes('pork') && food.porkRisk === true) return false;
-      if (food.dislikes.some(tag => prefs.dislikes.includes(tag))) return false;
-      if (food.spice > prefs.maxSpice) return false;
-      return true;
-    });
+    const category = food && FOOD_PHOTO_CATEGORIES.has(food.art) ? food.art : 'stirfry';
+    return `food-images/${category}.jpg`;
   }
 
   function weightedPick(pool) {
@@ -905,7 +781,7 @@ window.FOOD_DATABASE = [
       ? 'Spin for my food <span>🎲</span>'
       : 'Spin for our food <span>🎲</span>'; 
     $('#accept-pick').textContent = state.mode === 'solo' ? 'I’ll pick this ♡' : 'We’ll pick this ♡';
-    $('#spin-image').src = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22440%22%20height%3D%22320%22%20viewBox%3D%220%200%20440%20320%22%20role%3D%22img%22%20aria-label%3D%22Illustration%20of%20Chinese%20hot%20pot%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23F3E1D4%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFF5E8%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22bowl%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23FFF9F0%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9C3A7%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22sauce%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23B44C3A%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9A077%22/%3E%3C/linearGradient%3E%0A%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22180%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%228%22/%3E%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%22440%22%20height%3D%22320%22%20rx%3D%2228%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%3Ccircle%20cx%3D%2246%22%20cy%3D%2252%22%20r%3D%2237%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.22%22/%3E%3Ccircle%20cx%3D%22391%22%20cy%3D%22270%22%20r%3D%2253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.18%22/%3E%0A%3Cpath%20d%3D%22M0%20252%20Q110%20228%20220%20255%20T440%20244%20L440%20320%20L0%20320%20Z%22%20fill%3D%22%23D9A077%22%20opacity%3D%22.12%22/%3E%0A%3Cellipse%20cx%3D%22222%22%20cy%3D%22252%22%20rx%3D%22138%22%20ry%3D%2220%22%20fill%3D%22%2366503D%22%20opacity%3D%22.15%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%3Cpath%20d%3D%22M88%20140%20Q103%20278%20220%20281%20Q338%20278%20353%20140%20Z%22%20fill%3D%22url%28%23bowl%29%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%224%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22145%22%20rx%3D%22134%22%20ry%3D%2257%22%20fill%3D%22%23F7F0E5%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%225%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22147%22%20rx%3D%22120%22%20ry%3D%2247%22%20fill%3D%22%23C95D3D%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22128%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22128%22%20rx%3D%2213%22%20ry%3D%2211%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22128%22%20rx%3D%2215%22%20ry%3D%227%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22270%22%20cy%3D%22128%22%20rx%3D%2214%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22157%22%20rx%3D%2216%22%20ry%3D%226%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22157%22%20rx%3D%2213%22%20ry%3D%228%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22157%22%20rx%3D%2214%22%20ry%3D%2210%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Ccircle%20cx%3D%22214%22%20cy%3D%22150%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22193%22%20cy%3D%22147%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22127%22%20cy%3D%22141%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22207%22%20cy%3D%22167%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22239%22%20cy%3D%22164%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22216%22%20cy%3D%22133%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22224%22%20cy%3D%22153%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22226%22%20cy%3D%22149%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22177%22%20cy%3D%22157%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22131%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22155%22%20cy%3D%22116%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22285%22%20cy%3D%22149%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22229%22%20cy%3D%22124%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Cpath%20d%3D%22M270%2046%20L355%20185%22%20stroke%3D%22%238D573B%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M287%2039%20L369%20177%22%20stroke%3D%22%23BF8B5A%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M53%20125%20Q55%20130%2060%20132%20Q55%20134%2053%20139%20Q51%20134%2046%20132%20Q51%20130%2053%20125%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M372%2077%20Q374%2082%20379%2084%20Q374%2086%20372%2091%20Q370%2086%20365%2084%20Q370%2082%20372%2077%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M68%20253%20Q70%20258%2075%20260%20Q70%20262%2068%20267%20Q66%20262%2061%20260%20Q66%20258%2068%20253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M356%20245%20Q358%20250%20363%20252%20Q358%20254%20356%20259%20Q354%20254%20349%20252%20Q354%20250%20356%20245%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3C/svg%3E';
+    $('#spin-image').src = imagePath(foodById('stirfried-rice-cakes'));
     $('#spin-name-cn').textContent = '准备好了吗？';
     $('#spin-name-en').textContent = 'Ready to find something yummy?';
     $('#spin-region').textContent = 'YOUR NEXT MEAL';
