@@ -853,7 +853,7 @@ window.FOOD_DATABASE = [
   }
   document.addEventListener('click', scheduleLocalization, true);
   document.addEventListener('change', scheduleLocalization, true);
-  $('#language-toggle').addEventListener('click', () => setLanguage(currentLanguage === 'zh' ? 'en' : 'zh'));
+  document.getElementById('language-toggle').addEventListener('click', () => setLanguage(currentLanguage === 'zh' ? 'en' : 'zh'));
 
   const STORAGE_KEY = 'tinyFoodDatePicker_v2';
   const ALLERGEN_LABELS = {
