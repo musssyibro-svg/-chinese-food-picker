@@ -937,7 +937,115 @@ window.FOOD_DATABASE = [
     return `food-images/${category}.jpg`;
   }
 
-  function weightedPick(pool) {
+  function selectCardGroup(groupSelector, attrName, value) {
+    $(groupSelector).forEach(button => {
+      const selected = button.dataset[attrName] === value;
+      button.classList.toggle('selected', selected);
+      if (button.hasAttribute('aria-selected')) button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+  }
+
+  function renderModeControls() {
+    if (state.mode === 'solo') state.person = 'me';
+    selectCardGroup('#mode-options [data-mode]', 'mode', state.mode);
+    $('#mode-options [data-mode]').forEach(button => {
+      button.setAttribute('aria-pressed', button.dataset.mode === state.mode ? 'true' : 'false');
+    });
+    $('.profile-tabs').classList.toggle('hidden', state.mode !== 'together');
+    selectCardGroup('.profile-tabs [data-person]', 'person', state.person);
+    $('#profile-heading').textContent = state.mode === 'solo'
+      ? 'Your preferences'
+      : (state.person === 'me' ? 'Person 1 preferences' : 'Person 2 preferences');
+    $('#profile-desc').textContent = state.mode === 'solo'
+      ? 'Only your preferences will shape the food suggestions.'
+      : 'Set both people’s needs; suggestions must work for both.';
+  }
+
+  function renderBasicSettings() {
+    selectCardGroup('#meal-options [data-meal]', 'meal', state.meal);
+    selectCardGroup('#plan-options [data-plan]', 'plan', state.plan);
+    renderModeControls();
+    $('.spice-button').forEach(button => {
+      button.classList.toggle('selected', Number(button.dataset.spice) === state.profiles[state.person].spice);
+    });
+    $('#favorite-count').textContent = state.favorites.length;
+  }
+
+  function renderPreferenceControls() {
+    renderModeControls();
+    const profile = state.profiles[state.person];
+    $('#allergy-toggle').checked = !!profile.hasAllergies;
+    $('#allergy-options').classList.toggle('hidden', !profile.hasAllergies);
+    $('#allergy-checks input').forEach(input => { input.checked = profile.allergies.includes(input.value); });
+    $('#pork-free-toggle').checked = profile.diet.includes('pork');
+    $('#diet-checks input').forEach(input => { input.checked = profile.diet.includes(input.value); });
+    $('#dislike-checks input').forEach(input => { input.checked = profile.dislikes.includes(input.value); });
+    $('.spice-button').forEach(button => button.classList.toggle('selected', Number(button.dataset.spice) === profile.spice));
+    $('#favorite-count').textContent = state.favorites.length;
+  }
+
+  function selectedValues(containerSelector) {
+    return $(containerSelector + ' input:checked').map(input => input.value);
+  }
+
+  function renderMood() {
+    selectCardGroup('#mood-options [data-mood]', 'mood', state.mood);
+    const mood = MOODS[state.mood] || MOODS.surprise;
+    const solo = state.mode === 'solo';
+    $('#mood-side-emoji').textContent = mood.emoji;
+    $('#mood-side-title').textContent = state.mood === 'surprise'
+      ? (solo ? 'One hungry person. One delicious answer.' : 'Two people. One delicious answer.')
+      : mood.title + '.';
+    $('#mood-side-copy').textContent = state.mood === 'surprise'
+      ? (solo ? 'No more scrolling endlessly and still not knowing what to order.' : 'No more “anything is fine” followed by rejecting every suggestion.')
+      : mood.copy;
+    $('#mood-side-note').textContent = solo ? 'MADE FOR YOUR NEXT CRAVING ♡' : 'MADE FOR SHARED MEAL DECISIONS ♡';
+  }
+
+  function effectivePreferences() {
+    const profiles = state.mode === 'together'
+      ? [state.profiles.me, state.profiles.partner]
+      : [state.profiles.me];
+    const allergies = new Set();
+    const diet = new Set();
+    const dislikes = new Set();
+    profiles.forEach(profile => {
+      if (profile.hasAllergies) profile.allergies.forEach(value => allergies.add(value));
+      profile.diet.forEach(value => diet.add(value));
+      profile.dislikes.forEach(value => dislikes.add(value));
+    });
+    return {
+      allergies: Array.from(allergies),
+      diet: Array.from(diet),
+      dislikes: Array.from(dislikes),
+      maxSpice: Math.min(...profiles.map(profile => Number.isFinite(profile.spice) ? profile.spice : 2))
+    };
+  }
+
+  function mealMatches(food) {
+    if (state.meal === 'snack') return food.meal.some(tag => ['snack', 'dessert', 'drink'].includes(tag));
+    return food.meal.includes(state.meal);
+  }
+
+  function getEligiblePool() {
+    const prefs = effectivePreferences();
+    return DB.filter(food => {
+      if (!mealMatches(food)) return false;
+      if (state.plan === 'cook' && !food.homeCook) return false;
+      if (food.allergens.some(allergen => prefs.allergies.includes(allergen))) return false;
+      if (prefs.diet.includes('vegetarian') && !food.diet.includes('vegetarian')) return false;
+      const nonVegAvoids = prefs.diet.filter(value => value !== 'vegetarian');
+      if (food.diet.some(tag => nonVegAvoids.includes(tag))) return false;
+      // The pork-free switch also excludes dishes that are commonly prepared with pork,
+      // even where a restaurant may offer a different variant. This is a conservative cue, not a safety guarantee.
+      if (prefs.diet.includes('pork') && food.porkRisk === true) return false;
+      if (food.dislikes.some(tag => prefs.dislikes.includes(tag))) return false;
+      if (food.spice > prefs.maxSpice) return false;
+      return true;
+    });
+  }
+
+    function weightedPick(pool) {
     const mood = state.mood;
     const weights = pool.map(food => {
       let weight = 1;
