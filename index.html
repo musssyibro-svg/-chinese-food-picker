@@ -533,7 +533,7 @@ window.FOOD_DATABASE = [
     "Fresh & light":"清爽轻盈","Something not too heavy":"来点不太油腻的","Properly hungry":"我饿坏了","I need a proper meal":"想吃一顿正餐",
     "Lazy mode":"懒人模式","Easy, no extra effort":"省事又轻松","Treat myself":"犒劳一下自己","A little dessert energy":"来点甜品",
     "Surprise me":"给我惊喜","Let the food universe decide":"交给美食宇宙决定","← Back to preferences":"← 返回口味设置","Let's play":"开始吧",
-    "One hungry person.":"一个饿肚子的人，","One delicious answer.":"一个美味的答案。","No more scrolling endlessly and still not knowing what to order.":"不用再无休止地刷菜单，却还是不知道吃什么。",
+    "One hungry person.":"一个饿肚子的人，","One delicious answer.":"一个美味的答案。","Two people. One delicious answer.":"两个人，一个美味答案。","No more scrolling endlessly and still not knowing what to order.":"不用再无休止地刷菜单，却还是不知道吃什么。","No more “anything is fine” followed by rejecting every suggestion.":"不再先说“什么都行”，然后否定每个建议。",
     "MADE FOR YOUR NEXT CRAVING ♡":"为下一次馋嘴时刻而做 ♡","03 / LET FATE DECIDE":"03 / 交给命运决定",
     "Drumroll, please":"请准备好迎接惊喜","The next meal's":"下一顿饭的","main character.":"主角登场！",
     "A little spin, a tiny bit of suspense, and one less decision to make.":"转一转，期待一下，今天少做一个决定。",
@@ -572,8 +572,24 @@ window.FOOD_DATABASE = [
   })();
   const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   function translateText(value, language) {
+    const trimmed = value.trim();
+    const lead = value.slice(0, value.indexOf(trimmed));
+    const trail = value.slice(value.indexOf(trimmed) + trimmed.length);
+    if (language === 'zh') {
+      const count = trimmed.match(/^(\\d+) ideas? fits? your (breakfast|lunch|dinner|snack \/ sweet) filters?\\.$/i);
+      if (count) {
+        const meals = {breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'};
+        return lead + count[1] + ' 个选项符合你的' + (meals[count[2].toLowerCase()] || '用餐') + '筛选条件。' + trail;
+      }
+    } else {
+      const count = trimmed.match(/^(\\d+) 个选项符合你的(早餐|午餐|晚餐|小吃 \/ 甜品)筛选条件。$/);
+      if (count) {
+        const meals = {早餐:'breakfast',午餐:'lunch',晚餐:'dinner','小吃 / 甜品':'snack / sweet'};
+        return lead + count[1] + ' idea' + (count[1] === '1' ? '' : 's') + ' fit your ' + meals[count[2]] + ' filters.' + trail;
+      }
+    }
     const dictionary = language === 'zh' ? EN_ZH : ZH_EN;
-    const exact = dictionary[value.trim()];
+    const exact = dictionary[trimmed];
     if (exact !== undefined) return value.replace(value.trim(), exact);
     let output = value;
     const pairs = Object.entries(dictionary).sort((a,b) => b[0].length - a[0].length);
@@ -610,9 +626,11 @@ window.FOOD_DATABASE = [
     }
     const button = $('#language-toggle');
     if (button) {
-      button.textContent = currentLanguage === 'zh' ? 'EN' : '中文';
-      button.setAttribute('aria-label', currentLanguage === 'zh' ? '切换到英文' : 'Switch to Chinese');
-      button.title = currentLanguage === 'zh' ? '切换到英文' : 'Switch to Chinese';
+      const label = currentLanguage === 'zh' ? 'EN' : '中文';
+      const aria = currentLanguage === 'zh' ? '切换到英文' : 'Switch to Chinese';
+      if (button.textContent !== label) button.textContent = label;
+      if (button.getAttribute('aria-label') !== aria) button.setAttribute('aria-label', aria);
+      if (button.title !== aria) button.title = aria;
     }
     document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
   }
