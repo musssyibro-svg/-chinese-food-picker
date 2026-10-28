@@ -1,0 +1,16 @@
+REAL FOOD PHOTO LINKS / 实拍美食图片
+
+Noodles / 面条:
+https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg
+
+Burger meal / 汉堡餐:
+https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg
+
+Fruit dessert / 水果甜点:
+https://images.pexels.com/photos/1099680/pexels-photo-1099680.jpeg
+
+Asian stir-fried dish / 亚洲炒菜:
+https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg
+
+Pexels license: https://www.pexels.com/license/
+These are online links, not image files bundled in this repository. The app's existing illustrations remain available without remote photos.
