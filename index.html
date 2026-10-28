@@ -231,6 +231,11 @@
       .result-buttons button { flex:1 1 42%; }
       .primary-button { padding:14px 14px; }
     }
+
+    .language-button { min-width: 48px; justify-content:center; font-weight:950; border-color:#dfc8b7; background:#fff8f0; }
+    .photo-credit { display:block; margin-top:8px; }
+    .spin-image, .favorite-row img { background:#f1e1cf; }
+
     @media (prefers-reduced-motion: reduce) { *, *:before, *:after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
   </style>
 </head>
@@ -245,6 +250,7 @@
         </div>
       </div>
       <div class="top-actions">
+        <button class="icon-button language-button" id="language-toggle" type="button" aria-label="Switch language">EN</button>
         <div class="offline-pill" title="Food data and illustrations are bundled with the app"><span class="offline-dot"></span> Works offline</div>
         <button class="icon-button" id="share-app" type="button" aria-label="Share this food picker">↗ <span>Share app</span></button>
         <button class="icon-button" id="open-favorites" type="button" aria-label="Open favorite dishes">♡ <span id="favorite-count">0</span></button>
@@ -414,7 +420,7 @@
       <button class="back-link" id="back-mood" type="button">← Change the mood</button>
     </section>
 
-    <p class="tiny-foot"><strong>一点点爱，一顿好饭。</strong> A tiny bit of love, one good meal. This picker is an idea generator, not an ingredient or allergy-safety guarantee. Always check the actual dish and preparation.</p>
+    <p class="tiny-foot"><strong>一点点爱，一顿好饭。</strong> A tiny bit of love, one good meal. This picker is an idea generator, not an ingredient or allergy-safety guarantee. Always check the actual dish and preparation.<span class="photo-credit">Photos from <a href="https://www.pexels.com/" target="_blank" rel="noreferrer">Pexels</a>, <a href="https://unsplash.com/" target="_blank" rel="noreferrer">Unsplash</a> and <a href="https://www.epicurious.com/" target="_blank" rel="noreferrer">Epicurious</a>.</span></p>
   </div>
 
   <dialog id="favorites-dialog" aria-labelledby="favorites-title">
@@ -484,6 +490,143 @@ window.FOOD_DATABASE = [
 (() => {
   'use strict';
   const DB = Array.isArray(window.FOOD_DATABASE) ? window.FOOD_DATABASE : [];
+
+  const LANGUAGE_KEY = 'chineseFoodPickerLanguage';
+  const EN_ZH = {
+    "what are we eating?":"今晚吃什么？",
+    "Works offline":"支持离线使用",
+    "Share app":"分享应用",
+    "Share this food picker":"分享美食选择器",
+    "Open favorite dishes":"打开收藏菜品",
+    "01 / MAKE IT YOURS":"01 / 设置你的口味",
+    "A little food picker for whoever's hungry":"为饥肠辘辘的你准备的美食选择器",
+    "So... what sounds":"那么……今天想吃",
+    "delicious?":"什么美味？",
+    "Choose your meal, set the preferences that matter, and let the food roulette handle the hardest question of the day.":"选择用餐时间和口味偏好，让美食轮盘帮你解决每天最难的问题。",
+    "First, what time is it?":"首先，现在想吃哪一餐？",
+    "We'll only suggest food that fits the moment.":"只推荐适合这个时段的美食。",
+    "Breakfast":"早餐","Lunch":"午餐","Dinner":"晚餐","Snack / sweet":"小吃 / 甜品",
+    "How do you want to eat?":"你想怎么享用美食？",
+    "Cooking stays off the menu unless you invite it.":"除非你想下厨，否则不必考虑做饭。",
+    "Takeaway":"外卖","Default lazy mode":"懒人首选","Eat out":"外出就餐","Let's go somewhere":"出去找家店",
+    "Maybe cook":"也许自己做","Only if you feel like it":"有兴致再做","Let's cook":"在家做饭","Show easy home recipes":"查看简单家常菜谱",
+    "Who's eating?":"这顿饭有几个人？",
+    "Use the picker by yourself or combine preferences for two people.":"可以自己选，也可以综合两个人的口味。",
+    "SAVED HERE":"已保存在本机","🙋 Just me":"🙋 我自己","🥢 Two people":"🥢 两个人",
+    "Your preferences":"你的偏好","Only your preferences will shape the food suggestions.":"推荐将只考虑你的口味。",
+    "🙋 Person 1":"🙋 第一位","🧑 Person 2":"🧑 第二位","Does this person have food allergies?":"这位用餐者有食物过敏吗？",
+    "Select any known allergies":"请选择已知的过敏原","Peanuts":"花生","Tree nuts":"坚果","Sesame":"芝麻",
+    "Soy / soya":"大豆","Wheat / gluten":"小麦 / 麸质","Milk / dairy":"牛奶 / 乳制品","Egg":"鸡蛋","Fish":"鱼类",
+    "Shrimp / crab":"虾 / 蟹","Clams / squid":"贝类 / 鱿鱼","Important:":"重要提示：",
+    "This hides dishes with tagged or common possible allergens. Recipes vary, and unlisted ingredients or cross-contact are possible. Always confirm with the restaurant or cook, especially for serious allergies.":"此功能会隐藏标记含有常见过敏原的菜品。食谱和制作方式可能不同，也可能存在未标注成分或交叉接触。尤其是严重过敏时，请务必向餐厅或厨师确认。",
+    "Quick food filter":"快速筛选","🥢 Pork-free dishes only":"🥢 只看无猪肉菜品","Hide dishes known to contain pork or commonly prepared with pork.":"隐藏确定含猪肉或通常使用猪肉制作的菜品。",
+    "Saved privately on this device. Switch it off any time. Broths, sauces, oils and restaurant preparation can vary, so confirm ingredients when needed.":"偏好仅保存在这台设备上，可随时关闭。汤底、酱料、用油和餐厅做法可能不同，请按需确认成分。",
+    "Anything else you don't eat?":"还有不吃的食物吗？","Avoid beef":"不吃牛肉","Avoid lamb":"不吃羊肉","Avoid seafood":"不吃海鲜","Vegetarian":"素食",
+    "How much spice can you handle?":"你能接受多辣？","🥛 Mild":"🥛 微辣 / 不辣","🌶️ Medium":"🌶️ 中辣","🔥 Hot is fine":"🔥 重辣也可以",
+    "Foods you'd rather skip":"你不喜欢哪些食物？","Cilantro / 香菜":"香菜","Fermented / stinky food":"发酵 / 气味重的食物","Mushrooms":"蘑菇","Garlic":"大蒜",
+    "Onion / scallion":"洋葱 / 葱","Very sweet food":"特别甜的食物","Organs / offal":"动物内脏","Bitter melon":"苦瓜",
+    "Your preferences and favourites stay in this browser on this device. Nothing syncs to other phones, so anyone you share the app with gets their own private setup.":"你的偏好和收藏只保存在此设备的浏览器中，不会同步到其他手机。分享应用后，每个人都可以拥有自己的设置。",
+    "Reset preferences":"重置偏好","Next: pick a mood":"下一步：选择心情","02 / PICK A VIBE":"02 / 选择心情",
+    "No overthinking allowed":"别想太多","What's the":"今天是什么",
+    "vibe today?":"心情？","Just tap the mood that feels closest. It's a nudge, not a rule. The food still has to pass your filters.":"选择最符合你此刻心情的选项。它只是参考，推荐菜品仍须符合你的筛选条件。",
+    "Comfort me":"治愈一下","Warm, cosy, familiar":"温暖、舒心、熟悉的味道","Spicy chaos":"来点刺激","Bring on some excitement":"来点刺激和辣味",
+    "Fresh & light":"清爽轻盈","Something not too heavy":"来点不太油腻的","Properly hungry":"我饿坏了","I need a proper meal":"想吃一顿正餐",
+    "Lazy mode":"懒人模式","Easy, no extra effort":"省事又轻松","Treat myself":"犒劳一下自己","A little dessert energy":"来点甜品",
+    "Surprise me":"给我惊喜","Let the food universe decide":"交给美食宇宙决定","← Back to preferences":"← 返回口味设置","Let's play":"开始吧",
+    "One hungry person.":"一个饿肚子的人，","One delicious answer.":"一个美味的答案。","No more scrolling endlessly and still not knowing what to order.":"不用再无休止地刷菜单，却还是不知道吃什么。",
+    "MADE FOR YOUR NEXT CRAVING ♡":"为下一次馋嘴时刻而做 ♡","03 / LET FATE DECIDE":"03 / 交给命运决定",
+    "Drumroll, please":"请准备好迎接惊喜","The next meal's":"下一顿饭的","main character.":"主角登场！",
+    "A little spin, a tiny bit of suspense, and one less decision to make.":"转一转，期待一下，今天少做一个决定。",
+    "You've filtered the food universe a little too well 😅":"筛选条件太严格啦 😅",
+    "There aren't any dishes in this combination yet. Try another meal time, lower the spice limit, or remove one preference. Allergy and dietary restrictions should only be changed when genuinely appropriate.":"暂时没有符合这些条件的菜品。可以尝试其他用餐时段、降低辣度，或取消一项偏好。过敏和饮食限制请仅在确实适用时调整。",
+    "Review my filters":"检查筛选条件","THE FOOD ROULETTE":"美食轮盘","Ready to find something yummy?":"准备好寻找美味了吗？",
+    "YOUR NEXT MEAL":"你的下一餐","Spin for my food":"转出我的美食","Spin for our food":"转出我们的一餐",
+    "REROLLS":"重新抽选","2 left":"还可抽选 2 次","The universe has spoken ✨":"美食宇宙已给出答案 ✨",
+    "This is the one.":"就是它了！","👩‍🍳 Easy version at home":"👩‍🍳 简单家常做法","That's our dinner ♡":"今晚就吃它吧 ♡",
+    "♡ Save favourite":"♡ 收藏这道菜","♥ Saved favourite":"♥ 已收藏","↗ Share this dish":"↗ 分享这道菜",
+    "↻ Shuffle again":"↻ 再抽一次","No rerolls left":"没有剩余抽选次数","← Change the mood":"← 更换心情",
+    "A tiny bit of love, one good meal. This picker is an idea generator, not an ingredient or allergy-safety guarantee. Always check the actual dish and preparation.":"一点心意，一顿好饭。此工具仅供美食灵感参考，并不能保证实际成分或过敏安全。请务必核实菜品和制作方式。",
+    "Your saved cravings ♡":"你收藏的美食 ♡","Close ✕":"关闭 ✕","Remove":"移除","No saved cravings yet. When a dish looks good, tap “Save favourite” and it will live here.":"还没有收藏的美食。看到喜欢的菜品时，点击“收藏这道菜”即可保存。",
+    "Person 1 preferences":"第一位用餐者的偏好","Person 2 preferences":"第二位用餐者的偏好",
+    "Only your preferences will shape the food suggestions.":"推荐将只考虑你的口味。","Set both people’s needs; suggestions must work for both.":"设置双方的需求，推荐结果必须同时适合两个人。",
+    "For anyone marked as having allergies, select the allergy types first.":"请先为标记有过敏的用餐者选择具体过敏原。",
+    "No rerolls left this round. You can start a new round ♡":"本轮没有剩余抽选次数，可以开始新一轮 ♡",
+    "This is the only match that fits every filter.":"只有这道菜符合全部条件。",
+    "You’ve seen the whole shortlist — duplicates are possible now.":"已经看完所有候选菜品，接下来可能重复。",
+    "Saved for another hungry day ♡":"已收藏，留着下次嘴馋时再看 ♡",
+    "Removed from your saved cravings.":"已从收藏中移除。",
+    "Decision made ✨":"决定好了 ✨","A decision has been made. Victory!":"终于决定吃什么啦！",
+    "Copied — ready to send ♡":"已复制，可以分享啦 ♡","Publish the project online first, then this button can share its link.":"请先将项目发布到网上，之后即可分享链接。",
+    "Spin for a dish first, then share your pick.":"请先抽选一道菜，再分享你的选择。",
+    "Can cook at home":"可以在家做","Breakfast-friendly":"适合早餐","Mild":"清淡","A little kick":"微辣","Spicy":"辣","Very spicy":"特辣",
+    "Everyday favourite":"日常人气美食","Northern-style breakfast":"北方风味早餐","Shanghai / East China":"华东 / 上海",
+    "idea fits":"个选项符合","ideas fit":"个选项符合","your":"你的"," filters.":"筛选条件。","filters":"筛选条件",
+    "this could be the one.":"这道也许就是最佳选择。","Ready to find something yummy?":"准备好寻找美味了吗？",
+    "A gentle breakfast drink.":"温和的早餐饮品。","Soft, filling and easy to share.":"松软饱腹，适合分享。",
+    "Roast meat over rice; check the exact meat and sauce.":"米饭配烧味；请确认具体肉类和酱汁。",
+    "Photo credits":"图片来源","Photos from Pexels, Unsplash and Epicurious.":"图片来自 Pexels、Unsplash 和 Epicurious。"
+  };
+  const ZH_EN = Object.fromEntries(Object.entries(EN_ZH).map(([en,zh]) => [zh,en]));
+  let currentLanguage = (() => {
+    try { return localStorage.getItem(LANGUAGE_KEY) || 'zh'; } catch (_) { return 'zh'; }
+  })();
+  const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\  const DB = Array.isArray(window.FOOD_DATABASE) ? window.FOOD_DATABASE : [];');
+  function translateText(value, language) {
+    const dictionary = language === 'zh' ? EN_ZH : ZH_EN;
+    const exact = dictionary[value.trim()];
+    if (exact !== undefined) return value.replace(value.trim(), exact);
+    let output = value;
+    const pairs = Object.entries(dictionary).sort((a,b) => b[0].length - a[0].length);
+    for (const [source,target] of pairs) {
+      if (source.length < 5) continue;
+      const re = new RegExp(escapeRegExp(source), 'g');
+      output = output.replace(re, target);
+    }
+    if (language === 'zh') {
+      output = output.replace(/(\\d+) ideas? fit your (breakfast|lunch|dinner|snack \/ sweet) filters?\./gi, (_,n,meal) => `${n} 个选项符合你的${({breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'})[meal.toLowerCase()] || '用餐'}筛选条件。`);
+      output = output.replace(/(\\d+) (breakfast|lunch|dinner|snack \/ sweet)/gi, (_,n,meal) => `${n} ${({breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'})[meal.toLowerCase()] || meal}`);
+    } else {
+      output = output.replace(/(\\d+) 个选项符合你的(早餐|午餐|晚餐|小吃 \/ 甜品)筛选条件。/g, (_,n,meal) => `${n} idea${n === '1' ? '' : 's'} fit your ${({早餐:'breakfast',午餐:'lunch',晚餐:'dinner','小吃 / 甜品':'snack / sweet'})[meal]} filters.`);
+    }
+    return output;
+  }
+  function localizePage() {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const parent = node.parentElement;
+      if (!parent || ['SCRIPT','STYLE'].includes(parent.tagName)) continue;
+      const next = translateText(node.nodeValue, currentLanguage);
+      if (next !== node.nodeValue) node.nodeValue = next;
+    }
+    for (const el of document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')) {
+      for (const attr of ['title','aria-label','placeholder','alt']) {
+        if (!el.hasAttribute(attr)) continue;
+        const before = el.getAttribute(attr);
+        const after = translateText(before, currentLanguage);
+        if (after !== before) el.setAttribute(attr, after);
+      }
+    }
+    const button = $('#language-toggle');
+    if (button) {
+      button.textContent = currentLanguage === 'zh' ? 'EN' : '中文';
+      button.setAttribute('aria-label', currentLanguage === 'zh' ? '切换到英文' : 'Switch to Chinese');
+      button.title = currentLanguage === 'zh' ? '切换到英文' : 'Switch to Chinese';
+    }
+    document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
+  }
+  function setLanguage(language) {
+    currentLanguage = language === 'en' ? 'en' : 'zh';
+    try { localStorage.setItem(LANGUAGE_KEY, currentLanguage); } catch (_) {}
+    localizePage();
+  }
+  const languageObserver = new MutationObserver(mutations => {
+    if (mutations.some(m => m.type === 'childList' || m.type === 'characterData')) localizePage();
+  });
+  languageObserver.observe(document.body, {subtree:true,childList:true,characterData:true});
+  $('#language-toggle').addEventListener('click', () => setLanguage(currentLanguage === 'zh' ? 'en' : 'zh'));
+
   const STORAGE_KEY = 'tinyFoodDatePicker_v2';
   const ALLERGEN_LABELS = {
     peanut: 'peanuts', 'tree-nut': 'tree nuts', sesame: 'sesame', soy: 'soy', wheat: 'wheat / gluten',
@@ -557,7 +700,29 @@ window.FOOD_DATABASE = [
   }
 
   function foodById(id) { return DB.find(food => food.id === id); }
-  function imagePath(food) { return food ? (food.image || `food-images/${food.id}.svg`) : 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22440%22%20height%3D%22320%22%20viewBox%3D%220%200%20440%20320%22%20role%3D%22img%22%20aria-label%3D%22Illustration%20of%20Chinese%20hot%20pot%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23F3E1D4%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFF5E8%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22bowl%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23FFF9F0%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9C3A7%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id%3D%22sauce%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%23B44C3A%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23D9A077%22/%3E%3C/linearGradient%3E%0A%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-30%25%22%20y%3D%22-30%25%22%20width%3D%22160%25%22%20height%3D%22180%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%228%22/%3E%3C/filter%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%22440%22%20height%3D%22320%22%20rx%3D%2228%22%20fill%3D%22url%28%23bg%29%22/%3E%0A%3Ccircle%20cx%3D%2246%22%20cy%3D%2252%22%20r%3D%2237%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.22%22/%3E%3Ccircle%20cx%3D%22391%22%20cy%3D%22270%22%20r%3D%2253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.18%22/%3E%0A%3Cpath%20d%3D%22M0%20252%20Q110%20228%20220%20255%20T440%20244%20L440%20320%20L0%20320%20Z%22%20fill%3D%22%23D9A077%22%20opacity%3D%22.12%22/%3E%0A%3Cellipse%20cx%3D%22222%22%20cy%3D%22252%22%20rx%3D%22138%22%20ry%3D%2220%22%20fill%3D%22%2366503D%22%20opacity%3D%22.15%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%3Cpath%20d%3D%22M88%20140%20Q103%20278%20220%20281%20Q338%20278%20353%20140%20Z%22%20fill%3D%22url%28%23bowl%29%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%224%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22145%22%20rx%3D%22134%22%20ry%3D%2257%22%20fill%3D%22%23F7F0E5%22%20stroke%3D%22%23BDA58B%22%20stroke-width%3D%225%22/%3E%3Cellipse%20cx%3D%22220%22%20cy%3D%22147%22%20rx%3D%22120%22%20ry%3D%2247%22%20fill%3D%22%23C95D3D%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22128%22%20rx%3D%2210%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22128%22%20rx%3D%2213%22%20ry%3D%2211%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22128%22%20rx%3D%2215%22%20ry%3D%227%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22270%22%20cy%3D%22128%22%20rx%3D%2214%22%20ry%3D%227%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22144%22%20cy%3D%22157%22%20rx%3D%2216%22%20ry%3D%226%22%20fill%3D%22%23779A71%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22186%22%20cy%3D%22157%22%20rx%3D%2213%22%20ry%3D%228%22%20fill%3D%22%23FFF5E8%22%20opacity%3D%22.93%22/%3E%3Cellipse%20cx%3D%22228%22%20cy%3D%22157%22%20rx%3D%2214%22%20ry%3D%2210%22%20fill%3D%22%23B44C3A%22%20opacity%3D%22.93%22/%3E%3Ccircle%20cx%3D%22214%22%20cy%3D%22150%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22193%22%20cy%3D%22147%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22127%22%20cy%3D%22141%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22207%22%20cy%3D%22167%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22239%22%20cy%3D%22164%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22216%22%20cy%3D%22133%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22224%22%20cy%3D%22153%22%20r%3D%223%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22226%22%20cy%3D%22149%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22177%22%20cy%3D%22157%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22131%22%20r%3D%224%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22155%22%20cy%3D%22116%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22285%22%20cy%3D%22149%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Ccircle%20cx%3D%22229%22%20cy%3D%22124%22%20r%3D%222%22%20fill%3D%22%23583F30%22%20opacity%3D%22.35%22/%3E%3Cpath%20d%3D%22M270%2046%20L355%20185%22%20stroke%3D%22%238D573B%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M287%2039%20L369%20177%22%20stroke%3D%22%23BF8B5A%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3Cpath%20d%3D%22M53%20125%20Q55%20130%2060%20132%20Q55%20134%2053%20139%20Q51%20134%2046%20132%20Q51%20130%2053%20125%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M372%2077%20Q374%2082%20379%2084%20Q374%2086%20372%2091%20Q370%2086%20365%2084%20Q370%2082%20372%2077%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M68%20253%20Q70%20258%2075%20260%20Q70%20262%2068%20267%20Q66%20262%2061%20260%20Q66%20258%2068%20253%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3Cpath%20d%3D%22M356%20245%20Q358%20250%20363%20252%20Q358%20254%20356%20259%20Q354%20254%20349%20252%20Q354%20250%20356%20245%22%20fill%3D%22%23FFFFFF%22%20opacity%3D%22.65%22/%3E%3C/svg%3E'; }
+  // Real food photography is used instead of the missing food-images/*.svg files.
+  const FOOD_PHOTOS = {
+    dumpling: 'https://images.pexels.com/photos/6752827/pexels-photo-6752827.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    drink: 'https://specials-images.forbesimg.com/imageserve/64dca6cefecf8016cdb1ea3f/960x0.jpg',
+    street: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
+    egg: 'https://assets.epicurious.com/photos/6239fdf9ebb0382416abaf03/1%3A1/w_1600%2Cc_limit/HongKongEggTarts_RECIPE_IG_031722_30182.jpg',
+    soup: 'https://media.cntraveller.com/photos/65afbd1f82757337b9631bef/master/w_1024%2Cc_limit/Kung%2520Fu%2520Noodle_Beef%2520Noodles_%2520jan24-pr-global-Shot%2520by%2520Nic%2520Crilly%2520Hargrave.jpg',
+    noodles: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    rice: 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    stirfry: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
+    tofu: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
+    fish: 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
+    skewer: 'https://s.hdnux.com/photos/01/33/62/66/24063381/5/ratio3x2_1920.jpg',
+    greens: 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    dessert: 'https://assets.epicurious.com/photos/6239fdf9ebb0382416abaf03/1%3A1/w_1600%2Cc_limit/HongKongEggTarts_RECIPE_IG_031722_30182.jpg'
+  };
+  const FALLBACK_FOOD_PHOTOS = [
+    'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82',
+    'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=1200'
+  ];
+  function imagePath(food) {
+    return food ? (food.image || FOOD_PHOTOS[food.art] || FOOD_PHOTOS.stirfry) : FOOD_PHOTOS.stirfry;
+  }
 
   function selectCardGroup(groupSelector, attrName, value) {
     $$(groupSelector).forEach(button => {
@@ -875,6 +1040,16 @@ window.FOOD_DATABASE = [
     });
   }
 
+  // A broken external photo should not leave the dish card blank; try alternate real photography.
+  document.addEventListener('error', event => {
+    const img = event.target;
+    if (!(img instanceof HTMLImageElement) || img.dataset.photoFallback === 'done') return;
+    img.dataset.photoFallback = 'done';
+    const current = img.src;
+    const next = FALLBACK_FOOD_PHOTOS.find(url => url !== current);
+    if (next) img.src = next;
+  }, true);
+
   function currentAppUrl() {
     return location.protocol === 'http:' || location.protocol === 'https:' ? location.href : '';
   }
@@ -1057,6 +1232,7 @@ window.FOOD_DATABASE = [
     }
   });
 
+  setLanguage(currentLanguage);
   renderBasicSettings();
   renderPreferenceControls();
   renderMood();
