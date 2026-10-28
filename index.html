@@ -839,18 +839,20 @@ window.FOOD_DATABASE = [
     try { localStorage.setItem(LANGUAGE_KEY, currentLanguage); } catch (_) {}
     localizePage();
   }
-  const languageObserver = new MutationObserver(mutations => {
-    if (mutations.some(m => m.type === 'childList' || m.type === 'characterData')) localizePage();
-  });
-  // Translation itself changes text nodes. Disconnect while translating so the
-  // observer cannot repeatedly rescan/retranslate the entire page and stall taps.
-  const originalLocalizePage = localizePage;
-  localizePage = function() {
-    languageObserver.disconnect();
-    try { originalLocalizePage(); }
-    finally { languageObserver.observe(document.body, {subtree:true,childList:true,characterData:true}); }
-  };
-  languageObserver.observe(document.body, {subtree:true,childList:true,characterData:true});
+  // Do not observe every text mutation: rewriting the whole page on each DOM
+  // update made interactive controls feel frozen. Re-translate after user actions,
+  // while dynamic result/notice renderers schedule localization explicitly.
+  let localizationQueued = false;
+  function scheduleLocalization() {
+    if (localizationQueued) return;
+    localizationQueued = true;
+    queueMicrotask(() => {
+      localizationQueued = false;
+      localizePage();
+    });
+  }
+  document.addEventListener('click', scheduleLocalization, true);
+  document.addEventListener('change', scheduleLocalization, true);
   $('#language-toggle').addEventListener('click', () => setLanguage(currentLanguage === 'zh' ? 'en' : 'zh'));
 
   const STORAGE_KEY = 'tinyFoodDatePicker_v2';
@@ -916,6 +918,7 @@ window.FOOD_DATABASE = [
     const el = $('#toast');
     el.textContent = message;
     el.classList.add('show');
+    scheduleLocalization();
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
   }
@@ -1033,6 +1036,7 @@ window.FOOD_DATABASE = [
     $('#accept-pick').textContent = state.mode === 'solo' ? 'I’ll pick this ♡' : 'We’ll pick this ♡';
     $('#result-detail').classList.add('visible');
     $('#done-message').classList.remove('visible');
+    scheduleLocalization();
     $('#spin-button').classList.add('hidden');
     $('#spin-card').classList.remove('spinning');
     setRerollCounter();
@@ -1216,6 +1220,7 @@ window.FOOD_DATABASE = [
       : `Decision made 💗 今晚吃 ${selectedFood.cn} (${selectedFood.en}). Send this pick to the other person and enjoy!`;
     $('#done-message').textContent = message;
     $('#done-message').classList.add('visible');
+    scheduleLocalization();
     toast('A decision has been made. Victory!');
   }
 
