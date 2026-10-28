@@ -1,5 +1,5 @@
 /* Offline cache for the Chinese Food Picker. Photo assets are downloaded in the Pages build. */
-const CACHE_NAME = 'chinese-food-picker-v2';
+const CACHE_NAME = 'chinese-food-picker-v3';
 const APP_FILES = [
   './',
   './index.html',
