@@ -137,11 +137,16 @@
     .spin-header .lede { margin:12px auto 0; }
     .spin-stage { position:relative; width:min(620px,100%); margin:24px auto 0; padding:17px; border-radius:30px; background:rgba(255,255,255,.74); border:1px solid #ead8c5; box-shadow:var(--shadow); }
     .stage-ribbon { position:absolute; left:50%; top:-13px; transform:translateX(-50%); z-index:2; padding:7px 13px; border-radius:99px; background:var(--gold); color:#735327; font-size:10px; font-weight:950; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; }
-    .spin-card { overflow:hidden; border-radius:22px; background:#f4e4d5; transition:transform .15s; }
-    .spin-card.spinning { animation: bump .22s ease-in-out infinite alternate; }
-    @keyframes bump { from{transform:rotate(-.5deg) scale(.985)} to{transform:rotate(.5deg) scale(1.005)} }
-    .spin-image { display:block; width:100%; height:clamp(220px, 40vw, 350px); object-fit:cover; background:#f1e1cf; }
-    .spin-info { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:16px 18px 19px; background:#fffdf9; }
+    .spin-card { position:relative; overflow:hidden; border-radius:22px; background:#f4e4d5; }
+    .spin-image { display:block; width:100%; height:clamp(220px, 40vw, 350px); object-fit:cover; background:#f1e1cf; transition:opacity .28s ease, filter .28s ease, transform .28s ease; }
+    .spin-info { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:16px 18px 19px; background:#fffdf9; transition:opacity .22s ease, filter .22s ease; }
+    .spin-card.spinning .spin-image { opacity:.035; filter:blur(14px); transform:scale(1.06); }
+    .spin-card.spinning .spin-info { opacity:0; filter:blur(8px); }
+    .spin-card.spinning::after { content:"✦"; position:absolute; inset:0; z-index:2; display:grid; place-items:center; color:#bd684f; font-size:clamp(70px,18vw,128px); font-weight:900; background:radial-gradient(circle at center,rgba(255,249,240,.93),rgba(255,231,211,.86) 52%,rgba(238,209,187,.92)); animation:mystery-pulse .72s ease-in-out infinite alternate; pointer-events:none; }
+    .spin-card.revealing .spin-image { animation:food-reveal .42s ease both; }
+    @keyframes mystery-pulse { from { opacity:.78; transform:scale(.985); } to { opacity:1; transform:scale(1.015); } }
+    @keyframes food-reveal { from { opacity:0; filter:blur(12px); transform:scale(1.045); } to { opacity:1; filter:blur(0); transform:scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .spin-card.spinning::after { animation:none; } .spin-image,.spin-info { transition:none; } .spin-card.revealing .spin-image { animation:none; } }
     .spin-name-cn { font-size:25px; line-height:1.1; font-weight:950; letter-spacing:-.04em; }
     .spin-name-en { margin-top:5px; font-size:12px; color:var(--muted); font-weight:700; }
     .spin-region { display:inline-flex; max-width:140px; padding:7px 10px; background:#f6eee3; border-radius:99px; text-align:center; font-size:9px; font-weight:850; color:#8e715b; line-height:1.25; }
@@ -564,7 +569,27 @@ window.FOOD_DATABASE = [
     "this could be the one.":"这道也许就是最佳选择。","Ready to find something yummy?":"准备好寻找美味了吗？",
     "A gentle breakfast drink.":"温和的早餐饮品。","Soft, filling and easy to share.":"松软饱腹，适合分享。",
     "Roast meat over rice; check the exact meat and sauce.":"米饭配烧味；请确认具体肉类和酱汁。",
-    "Photo credits":"图片来源","Photos from Pexels and Unsplash.":"图片来自 Pexels 和 Unsplash。"
+    "Photo credits":"图片来源","Photos from Pexels and Unsplash.":"图片来自 Pexels 和 Unsplash。",
+    "Next":"下一步","Back":"返回","Continue":"继续","Start":"开始","Done":"完成","Save":"保存","Cancel":"取消",
+    "Close":"关闭","Open":"打开","Settings":"设置","Reset":"重置","Apply":"应用","Confirm":"确认",
+    "Choose":"选择","Choose a dish":"选择一道菜","Pick for me":"帮我选","Pick for us":"帮我们选",
+    "Spin":"抽选","Shuffle":"重新抽选","Shuffle again":"再抽一次","Try again":"再试一次","Try another":"换一道",
+    "I’ll pick this ♡":"我选这道 ♡","We’ll pick this ♡":"我们选这道 ♡",
+    "← Back":"← 返回","← Back to preferences":"← 返回口味设置","← Change the mood":"← 更换心情",
+    "Review my filters":"检查筛选条件","No rerolls left":"没有剩余抽选次数","2 left":"还可抽选 2 次",
+    "Filter":"筛选","Filters":"筛选条件","Clear filters":"清除筛选","Remove filter":"移除筛选",
+    "Favorites":"收藏","Favourites":"收藏","Open favourites":"打开收藏","Open favorites":"打开收藏",
+    "Remove from favorites":"从收藏中移除","Remove from favourites":"从收藏中移除",
+    "Person 1":"第一位用餐者","Person 2":"第二位用餐者","Just me":"我自己","Two people":"两个人",
+    "Pork-free":"无猪肉","Pork-free dishes only":"只看无猪肉菜品","Allergies":"过敏原","Dislikes":"不喜欢的食物",
+    "Mild":"清淡","Medium":"中辣","Hot":"重辣","Very spicy":"特辣",
+    "Breakfast":"早餐","Lunch":"午餐","Dinner":"晚餐","Snack / sweet":"小吃 / 甜品",
+    "Takeaway":"外卖","Eat out":"外出就餐","Maybe cook":"也许自己做","Let's cook":"在家做饭",
+    "Comfort me":"治愈一下","Spicy chaos":"来点刺激","Fresh & light":"清爽轻盈","Properly hungry":"我饿坏了",
+    "Lazy mode":"懒人模式","Treat myself":"犒劳一下自己","Surprise me":"给我惊喜",
+    "I’ll pick this":"我选这道","We’ll pick this":"我们选这道","Saved favourite":"已收藏","Save favourite":"收藏这道菜",
+    "Share":"分享","Share this dish":"分享这道菜","Start over":"重新开始","New round":"新一轮",
+    "Photo credits":"图片来源","Offline":"离线","Works offline":"支持离线使用"
   };
   const FOOD_TRANSLATIONS = {
   "Soft, filling and easy to share.": "松软饱腹，适合分享。",
@@ -806,6 +831,10 @@ window.FOOD_DATABASE = [
     }
     return output;
   }
+  // Preserve each node's authored text so language switches always translate
+  // from the original label, never from an already translated string.
+  const localizationTextState = new WeakMap();
+  const localizationAttributeState = new WeakMap();
   function localizePage() {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodes = [];
@@ -813,15 +842,33 @@ window.FOOD_DATABASE = [
     for (const node of nodes) {
       const parent = node.parentElement;
       if (!parent || ['SCRIPT','STYLE'].includes(parent.tagName)) continue;
-      const next = translateText(node.nodeValue, currentLanguage);
+      let record = localizationTextState.get(node);
+      if (!record) {
+        record = { source: node.nodeValue, lastOutput: node.nodeValue };
+        localizationTextState.set(node, record);
+      } else if (node.nodeValue !== record.lastOutput) {
+        record.source = node.nodeValue;
+      }
+      const next = translateText(record.source, currentLanguage);
       if (next !== node.nodeValue) node.nodeValue = next;
+      record.lastOutput = next;
     }
     for (const el of document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')) {
+      let state = localizationAttributeState.get(el);
+      if (!state) { state = {}; localizationAttributeState.set(el, state); }
       for (const attr of ['title','aria-label','placeholder','alt']) {
         if (!el.hasAttribute(attr)) continue;
-        const before = el.getAttribute(attr);
-        const after = translateText(before, currentLanguage);
-        if (after !== before) el.setAttribute(attr, after);
+        let record = state[attr];
+        const current = el.getAttribute(attr);
+        if (!record) {
+          record = { source: current, lastOutput: current };
+          state[attr] = record;
+        } else if (current !== record.lastOutput) {
+          record.source = current;
+        }
+        const after = translateText(record.source, currentLanguage);
+        if (after !== current) el.setAttribute(attr, after);
+        record.lastOutput = after;
       }
     }
     const button = $('#language-toggle');
@@ -1186,17 +1233,12 @@ window.FOOD_DATABASE = [
       if (fresh.length >= 3) candidates = fresh;
     }
     const winner = weightedPick(candidates);
-    let tick = 0;
-    const maxTicks = 25;
-    const timerTick = () => {
-      if (tick < maxTicks - 1) {
-        const preview = pool[Math.floor(Math.random() * pool.length)];
-        renderSpinFood(preview);
-        tick += 1;
-        const delay = 48 + tick * tick * 0.30;
-        setTimeout(timerTick, delay);
-        return;
-      }
+    // Keep the selected dish hidden while the mystery veil fades in.
+    // No intermediate candidates are shown, so the final pick remains a surprise.
+    const revealDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 180 : 1050;
+    setTimeout(() => {
+      $('#spin-card').classList.remove('spinning');
+      $('#spin-card').classList.add('revealing');
       renderSpinFood(winner);
       selectedFood = winner;
       seenThisRound.push(winner.id);
@@ -1206,8 +1248,8 @@ window.FOOD_DATABASE = [
       $('#spin-button').disabled = false;
       renderResult(winner);
       setRerollCounter();
-    };
-    timerTick();
+      setTimeout(() => $('#spin-card').classList.remove('revealing'), 450);
+    }, revealDelay);
   }
 
   function saveFavorite(food) {
