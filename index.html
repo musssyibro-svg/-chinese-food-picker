@@ -1452,6 +1452,9 @@ window.FOOD_DATABASE = [
   renderPreferenceControls();
   renderMood();
   $('#favorite-count').textContent = state.favorites.length;
+  // Renderers set a few dynamic labels after language initialization, so apply
+  // the first-visit language once more after the initial UI has finished rendering.
+  scheduleLocalization();
 
   // When hosted on HTTPS, cache the app shell for repeat offline use. file:// use already loads local assets directly.
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
