@@ -842,6 +842,14 @@ window.FOOD_DATABASE = [
   const languageObserver = new MutationObserver(mutations => {
     if (mutations.some(m => m.type === 'childList' || m.type === 'characterData')) localizePage();
   });
+  // Translation itself changes text nodes. Disconnect while translating so the
+  // observer cannot repeatedly rescan/retranslate the entire page and stall taps.
+  const originalLocalizePage = localizePage;
+  localizePage = function() {
+    languageObserver.disconnect();
+    try { originalLocalizePage(); }
+    finally { languageObserver.observe(document.body, {subtree:true,childList:true,characterData:true}); }
+  };
   languageObserver.observe(document.body, {subtree:true,childList:true,characterData:true});
   $('#language-toggle').addEventListener('click', () => setLanguage(currentLanguage === 'zh' ? 'en' : 'zh'));
 
