@@ -570,7 +570,7 @@ window.FOOD_DATABASE = [
   let currentLanguage = (() => {
     try { return localStorage.getItem(LANGUAGE_KEY) || 'zh'; } catch (_) { return 'zh'; }
   })();
-  const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\  const DB = Array.isArray(window.FOOD_DATABASE) ? window.FOOD_DATABASE : [];');
+  const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   function translateText(value, language) {
     const dictionary = language === 'zh' ? EN_ZH : ZH_EN;
     const exact = dictionary[value.trim()];
@@ -583,10 +583,10 @@ window.FOOD_DATABASE = [
       output = output.replace(re, target);
     }
     if (language === 'zh') {
-      output = output.replace(/(\\d+) ideas? fit your (breakfast|lunch|dinner|snack \/ sweet) filters?\./gi, (_,n,meal) => `${n} 个选项符合你的${({breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'})[meal.toLowerCase()] || '用餐'}筛选条件。`);
-      output = output.replace(/(\\d+) (breakfast|lunch|dinner|snack \/ sweet)/gi, (_,n,meal) => `${n} ${({breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'})[meal.toLowerCase()] || meal}`);
+      output = output.replace(/(\d+) ideas? fit your (breakfast|lunch|dinner|snack \/ sweet) filters?\./gi, (_,n,meal) => `${n} 个选项符合你的${({breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'})[meal.toLowerCase()] || '用餐'}筛选条件。`);
+      output = output.replace(/(\d+) (breakfast|lunch|dinner|snack \/ sweet)/gi, (_,n,meal) => `${n} ${({breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'})[meal.toLowerCase()] || meal}`);
     } else {
-      output = output.replace(/(\\d+) 个选项符合你的(早餐|午餐|晚餐|小吃 \/ 甜品)筛选条件。/g, (_,n,meal) => `${n} idea${n === '1' ? '' : 's'} fit your ${({早餐:'breakfast',午餐:'lunch',晚餐:'dinner','小吃 / 甜品':'snack / sweet'})[meal]} filters.`);
+      output = output.replace(/(\d+) 个选项符合你的(早餐|午餐|晚餐|小吃 \/ 甜品)筛选条件。/g, (_,n,meal) => `${n} idea${n === '1' ? '' : 's'} fit your ${({早餐:'breakfast',午餐:'lunch',晚餐:'dinner','小吃 / 甜品':'snack / sweet'})[meal]} filters.`);
     }
     return output;
   }
