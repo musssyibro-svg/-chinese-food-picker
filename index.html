@@ -747,7 +747,7 @@ window.FOOD_DATABASE = [
   function renderSpinFood(food) {
     if (!food) return;
     $('#spin-image').src = imagePath(food);
-    $('#spin-image').alt = `${food.en} offline illustration`;
+    $('#spin-image').alt = `${food.en} food photograph`;
     $('#spin-name-cn').textContent = food.cn;
     $('#spin-name-en').textContent = food.en;
     $('#spin-region').textContent = food.region;
@@ -919,7 +919,7 @@ window.FOOD_DATABASE = [
     }
     foods.forEach(food => {
       const row = document.createElement('div'); row.className = 'favorite-row';
-      const img = document.createElement('img'); img.src = imagePath(food); img.alt = `${food.en} illustration`;
+      const img = document.createElement('img'); img.src = imagePath(food); img.alt = `${food.en} food photograph`;
       const main = document.createElement('div'); main.className = 'favorite-main';
       const strong = document.createElement('strong'); strong.textContent = food.cn;
       const sub = document.createElement('span'); sub.textContent = food.en;
@@ -940,7 +940,7 @@ window.FOOD_DATABASE = [
     if (!(img instanceof HTMLImageElement) || img.dataset.photoFallback === 'done') return;
     img.dataset.photoFallback = 'done';
     const current = img.src;
-    const next = FALLBACK_FOOD_PHOTOS.find(url => url !== current);
+    const next = FALLBACK_FOOD_PHOTOS.map(url => new URL(url, document.baseURI).href).find(url => url !== current);
     if (next) img.src = next;
   }, true);
 
