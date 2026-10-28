@@ -576,13 +576,13 @@ window.FOOD_DATABASE = [
     const lead = value.slice(0, value.indexOf(trimmed));
     const trail = value.slice(value.indexOf(trimmed) + trimmed.length);
     if (language === 'zh') {
-      const count = trimmed.match(/^(\\d+) ideas? fits? your (breakfast|lunch|dinner|snack \/ sweet) filters?\\.$/i);
+      const count = trimmed.match(/^(\d+) ideas? fits? your (breakfast|lunch|dinner|snack \/ sweet) filters?\.$/i);
       if (count) {
         const meals = {breakfast:'早餐',lunch:'午餐',dinner:'晚餐','snack / sweet':'小吃 / 甜品'};
         return lead + count[1] + ' 个选项符合你的' + (meals[count[2].toLowerCase()] || '用餐') + '筛选条件。' + trail;
       }
     } else {
-      const count = trimmed.match(/^(\\d+) 个选项符合你的(早餐|午餐|晚餐|小吃 \/ 甜品)筛选条件。$/);
+      const count = trimmed.match(/^(\d+) 个选项符合你的(早餐|午餐|晚餐|小吃 \/ 甜品)筛选条件。$/);
       if (count) {
         const meals = {早餐:'breakfast',午餐:'lunch',晚餐:'dinner','小吃 / 甜品':'snack / sweet'};
         return lead + count[1] + ' idea' + (count[1] === '1' ? '' : 's') + ' fit your ' + meals[count[2]] + ' filters.' + trail;
