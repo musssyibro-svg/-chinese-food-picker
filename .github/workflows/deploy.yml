@@ -60,6 +60,20 @@ jobs:
             test -s "$photo"
             file "$photo" | grep -q 'JPEG image data'
           done
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Run browser smoke tests
+        run: |
+          python3 -m http.server 4173 --directory _site >/tmp/chinese-food-picker-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          node .github/tests/smoke.mjs
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
