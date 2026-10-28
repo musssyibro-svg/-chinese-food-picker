@@ -34,7 +34,7 @@ jobs:
           curl -fLsS --retry 2 'https://images.unsplash.com/photo-1704409043347-fb32f0b6bdcb?auto=format&fit=crop&w=1200&q=82' -o _site/food-images/chinese-feast.jpg
           curl -fLsS --retry 2 'https://images.pexels.com/photos/6752827/pexels-photo-6752827.jpeg?auto=compress&cs=tinysrgb&w=1200' -o _site/food-images/dumpling.jpg
           curl -fLsS --retry 2 'https://specials-images.forbesimg.com/imageserve/64dca6cefecf8016cdb1ea3f/960x0.jpg' -o _site/food-images/drink.jpg
-          curl -fLsS --retry 2 'https://assets.epicurious.com/photos/6239fdf9ebb0382416abaf03/1%3A1/w_1600%2Cc_limit/HongKongEggTarts_RECIPE_IG_031722_30182.jpg' -o _site/food-images/egg.jpg
+          curl -fLsS --retry 2 'https://images.pexels.com/photos/9633532/pexels-photo-9633532.jpeg?auto=compress&cs=tinysrgb&w=1200' -o _site/food-images/egg.jpg
           curl -fLsS --retry 2 'https://media.cntraveller.com/photos/65afbd1f82757337b9631bef/master/w_1024%2Cc_limit/Kung%2520Fu%2520Noodle_Beef%2520Noodles_%2520jan24-pr-global-Shot%2520by%2520Nic%2520Crilly%2520Hargrave.jpg' -o _site/food-images/soup.jpg
           curl -fLsS --retry 2 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=1200' -o _site/food-images/noodles.jpg
           curl -fLsS --retry 2 'https://images.pexels.com/photos/2347311/pexels-photo-2347311.jpeg?auto=compress&cs=tinysrgb&w=1200' -o _site/food-images/rice.jpg
