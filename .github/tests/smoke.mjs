@@ -10,6 +10,17 @@ try {
   await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
   await page.waitForSelector('#language-toggle');
 
+  // PWA manifest must be valid JSON and the app must register its service worker.
+  const manifestResponse = await page.request.get('http://127.0.0.1:4173/manifest.webmanifest');
+  if (!manifestResponse.ok()) throw new Error('PWA manifest is missing');
+  const manifest = await manifestResponse.json();
+  if (manifest.name !== 'Chinese Food Picker — 今晚吃什么？' || manifest.start_url !== './') throw new Error('PWA manifest content is invalid');
+  await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) throw new Error('Service workers are unsupported in this browser');
+    const registration = await navigator.serviceWorker.ready;
+    if (!registration.active) throw new Error('Service worker did not activate');
+  });
+
   // First visit should use Simplified Chinese.
   const firstLanguage = await page.locator('html').getAttribute('lang');
   if (firstLanguage !== 'zh-CN') throw new Error(`Expected Chinese first-visit language; got ${firstLanguage}`);
