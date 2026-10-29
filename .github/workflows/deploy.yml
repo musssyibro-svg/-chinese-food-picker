@@ -26,7 +26,7 @@ jobs:
       - name: Prepare site and download real food photos
         run: |
           mkdir -p _site/food-images
-          cp index.html food_intro_en.txt food_intro_zh.txt readme.txt PHOTO-LINKS.txt service-worker.js _site/
+          cp index.html food_intro_en.txt food_intro_zh.txt readme.txt PHOTO-LINKS.txt service-worker.js manifest.webmanifest _site/
           touch _site/.nojekyll
 
           # These are real food photographs, packaged on the Pages site so the app
