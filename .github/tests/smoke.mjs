@@ -56,6 +56,12 @@ try {
     if (bytes.length < 1000 || bytes[0] !== 0xff || bytes[1] !== 0xd8) throw new Error(`Photo is not a valid JPEG: ${category}.jpg`);
   }
 
+  // Requested additions must exist in the app's real food database.
+  const foods = await page.evaluate(() => window.FOOD_DATABASE.map(food => food.cn));
+  for (const name of ['火鸡面','螺蛳粉','烤冷面','盖浇饭','炒河粉','咖喱饭']) {
+    if (!foods.includes(name)) throw new Error('Requested food is missing: ' + name);
+  }
+
   // Main flow: mood -> roulette -> result -> favourite -> reroll.
   await page.locator('#to-mood').click();
   if (!await page.locator('#screen-mood').evaluate(el => el.classList.contains('active'))) throw new Error('Next button did not open mood screen');
@@ -63,6 +69,8 @@ try {
   await page.locator('#to-spin').click();
   if (!await page.locator('#screen-spin').evaluate(el => el.classList.contains('active'))) throw new Error('Play button did not open roulette screen');
   await page.locator('#spin-button').click();
+  // Roulette must not reveal its default/previous dish before the suspense reveal.
+  if (await page.locator('#spin-image').getAttribute('src')) throw new Error('Roulette previews a dish before the user spins');
   await page.locator('#result-detail.visible').waitFor({ timeout: 15000 });
   await page.waitForFunction(() => {
     const img = document.querySelector('#spin-image');
