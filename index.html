@@ -140,10 +140,12 @@
     .spin-card { position:relative; overflow:hidden; border-radius:22px; background:#f4e4d5; }
     .spin-image { display:block; width:100%; height:clamp(220px, 40vw, 350px); object-fit:cover; background:#f1e1cf; transition:opacity .28s ease, filter .28s ease, transform .28s ease; }
     .spin-info { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:16px 18px 19px; background:#fffdf9; transition:opacity .22s ease, filter .22s ease; }
-    .spin-card.spinning .spin-image { opacity:.035; filter:blur(14px); transform:scale(1.06); }
+    .spin-card.spinning .spin-image { opacity:0; filter:blur(18px); transform:scale(1.06); }
+    .spin-card.revealing .spin-info { animation:food-info-reveal .48s .08s ease both; }
+    @keyframes food-info-reveal { from { opacity:0; filter:blur(8px); transform:translateY(7px); } to { opacity:1; filter:blur(0); transform:translateY(0); } }
     .spin-card.spinning .spin-info { opacity:0; filter:blur(8px); }
     .spin-card.spinning::after { content:"✦"; position:absolute; inset:0; z-index:2; display:grid; place-items:center; color:#bd684f; font-size:clamp(70px,18vw,128px); font-weight:900; background:radial-gradient(circle at center,rgba(255,249,240,.93),rgba(255,231,211,.86) 52%,rgba(238,209,187,.92)); animation:mystery-pulse .72s ease-in-out infinite alternate; pointer-events:none; }
-    .spin-card.revealing .spin-image { animation:food-reveal .42s ease both; }
+     .spin-card.revealing .spin-image { animation:food-reveal .62s ease both; }
     @keyframes mystery-pulse { from { opacity:.78; transform:scale(.985); } to { opacity:1; transform:scale(1.015); } }
     @keyframes food-reveal { from { opacity:0; filter:blur(12px); transform:scale(1.045); } to { opacity:1; filter:blur(0); transform:scale(1); } }
     @media (prefers-reduced-motion: reduce) { .spin-card.spinning::after { animation:none; } .spin-image,.spin-info { transition:none; } .spin-card.revealing .spin-image { animation:none; } }
@@ -494,7 +496,13 @@ window.FOOD_DATABASE = [
   {id:'chinese-bbq',porkRisk:true,cn:'烧烤',en:'Chinese barbecue',region:'Chinese street-food favourite',meal:['lunch','dinner','snack'],mood:['spicy','hearty','surprise'],allergens:['soy','sesame','peanut','wheat'],diet:[],dislikes:[],spice:2,homeCook:false,art:'skewer',note:'Grilled skewers and other barbecue bites; meat types, marinades and seasonings vary.',emoji:'🍢'},
   {id:'chicken-cutlet-rice',cn:'鸡排饭',en:'Chicken cutlet rice',region:'Chinese rice-box favourite',meal:['lunch','dinner'],mood:['comfort','hearty','lazy'],allergens:['wheat','egg','soy'],diet:['chicken'],dislikes:[],spice:1,homeCook:false,art:'rice',note:'Crispy chicken cutlet served with rice and sides; sauces and toppings vary.',emoji:'🍗'},
   {id:'mr-rice-meal',porkRisk:true,cn:'大米先生套餐饭',en:'Mr. Rice meal box',region:'Chinese fast-casual rice meals',meal:['lunch','dinner'],mood:['comfort','hearty','lazy'],allergens:['soy','wheat','sesame','egg'],diet:[],dislikes:[],spice:1,homeCook:false,art:'rice',note:'A Mr. Rice (大米先生) rice meal; available dishes, proteins and ingredients depend on the branch and menu.',emoji:'🍱'},
-  {id:'chinese-stir-fry',porkRisk:true,cn:'炒菜',en:'Chinese stir-fried dishes',region:'Everyday Chinese restaurant food',meal:['lunch','dinner'],mood:['comfort','fresh','hearty'],allergens:['soy','wheat','sesame','egg'],diet:[],dislikes:[],spice:1,homeCook:false,art:'stirfry',note:'A broad choice of wok-fried dishes with vegetables, meat or tofu; ingredients depend on what you order.',emoji:'🥘'}
+  {id:'chinese-stir-fry',porkRisk:true,cn:'炒菜',en:'Chinese stir-fried dishes',region:'Everyday Chinese restaurant food',meal:['lunch','dinner'],mood:['comfort','fresh','hearty'],allergens:['soy','wheat','sesame','egg'],diet:[],dislikes:[],spice:1,homeCook:false,art:'stirfry',note:'A broad choice of wok-fried dishes with vegetables, meat or tofu; ingredients depend on what you order.',emoji:'🥘'},
+  {id:'spicy-turkey-noodles',cn:'火鸡面',en:'Spicy turkey noodles',region:'Korean-style instant noodle favourite',meal:['lunch','dinner','snack'],mood:['spicy','lazy','hearty'],allergens:['wheat','soy','sesame'],diet:[],dislikes:['very-spicy'],spice:3,homeCook:true,art:'noodles',note:'Bold, spicy instant noodles; seasoning and heat vary by brand. Check the packet for ingredients.',emoji:'🍜'},
+  {id:'luosifen',porkRisk:true,cn:'螺蛳粉',en:'Liuzhou snail rice noodles',region:'Liuzhou / Guangxi',meal:['lunch','dinner'],mood:['spicy','comfort','surprise'],allergens:['peanut','soy','wheat','fish'],diet:[],dislikes:['very-spicy'],spice:3,homeCook:true,art:'noodles',note:'A pungent, sour-spicy rice noodle soup with pickled bamboo shoots and varied toppings.',emoji:'🍜'},
+  {id:'grilled-cold-noodles',cn:'烤冷面',en:'Grilled cold noodles',region:'Northeast China street food',meal:['lunch','dinner','snack'],mood:['comfort','hearty','surprise'],allergens:['wheat','egg','soy'],diet:[],dislikes:[],spice:1,homeCook:false,art:'noodles',note:'A chewy noodle sheet grilled with egg, sauce and optional toppings; vendor recipes vary.',emoji:'🥞'},
+  {id:'rice-with-toppings',porkRisk:true,cn:'盖浇饭',en:'Rice bowl with toppings',region:'Everyday Chinese meal',meal:['lunch','dinner'],mood:['comfort','hearty','lazy'],allergens:['soy','wheat','egg'],diet:[],dislikes:[],spice:1,homeCook:true,art:'rice',note:'A bowl of rice topped with a saucy meat, vegetable, egg or tofu dish; choose your topping.',emoji:'🍚'},
+  {id:'stir-fried-rice-noodles',porkRisk:true,cn:'炒河粉',en:'Stir-fried rice noodles',region:'Southern China / Cantonese favourite',meal:['lunch','dinner'],mood:['comfort','hearty','fresh'],allergens:['soy','wheat','egg'],diet:[],dislikes:[],spice:1,homeCook:true,art:'noodles',note:'Wide rice noodles stir-fried with vegetables and optional meat; ask about sauces and ingredients.',emoji:'🍜'},
+  {id:'curry-rice',cn:'咖喱饭',en:'Curry rice',region:'Chinese-Japanese curry meal',meal:['lunch','dinner'],mood:['comfort','hearty','lazy'],allergens:['soy','wheat'],diet:[],dislikes:[],spice:1,homeCook:true,art:'rice',note:'Rice served with a savoury curry sauce and optional vegetables or protein.',emoji:'🍛'}
 ];
 
 </script>
@@ -1109,10 +1117,19 @@ window.FOOD_DATABASE = [
       return Math.max(0.05, weight);
     });
     const total = weights.reduce((sum, value) => sum + value, 0);
-    let r = Math.random() * total;
+    // Prefer browser entropy for independent, unbiased draws; fall back for older webviews.
+    let unit = Math.random();
+    try {
+      if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+        const sample = new Uint32Array(1);
+        window.crypto.getRandomValues(sample);
+        unit = sample[0] / 4294967296;
+      }
+    } catch (_) {}
+    let r = unit * total;
     for (let index = 0; index < pool.length; index++) {
       r -= weights[index];
-      if (r <= 0) return pool[index];
+      if (r < 0) return pool[index];
     }
     return pool[pool.length - 1];
   }
@@ -1154,7 +1171,8 @@ window.FOOD_DATABASE = [
       ? 'Spin for my food <span>🎲</span>'
       : 'Spin for our food <span>🎲</span>'; 
     $('#accept-pick').textContent = state.mode === 'solo' ? 'I’ll pick this ♡' : 'We’ll pick this ♡';
-    $('#spin-image').src = imagePath(foodById('stirfried-rice-cakes'));
+    $('#spin-image').removeAttribute('src');
+    $('#spin-image').alt = '';
     $('#spin-name-cn').textContent = '准备好了吗？';
     $('#spin-name-en').textContent = 'Ready to find something yummy?';
     $('#spin-region').textContent = 'YOUR NEXT MEAL';
