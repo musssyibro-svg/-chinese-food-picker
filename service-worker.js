@@ -1,5 +1,5 @@
 /* Offline-first service worker for the Chinese Food Picker. */
-const CACHE_NAME = 'chinese-food-picker-v5';
+const CACHE_NAME = 'chinese-food-picker-v6';
 const APP_FILES = [
   './',
   './index.html',
